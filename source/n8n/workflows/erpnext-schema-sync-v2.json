@@ -1,0 +1,476 @@
+[
+  {
+    "id": "7e34e488-a25f-49f8-b0b4-7a3a235dd35d",
+    "name": "ERPNext Schema Sync v2",
+    "active": false,
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "__AI_SCHEMA_SYNC_WEBHOOK_ID__",
+          "authentication": "headerAuth",
+          "responseMode": "onReceived",
+          "options": {}
+        },
+        "id": "sync-webhook",
+        "name": "Authenticated Sync Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [-1280, -80],
+        "webhookId": "__AI_SCHEMA_SYNC_WEBHOOK_ID__",
+        "credentials": {
+          "httpHeaderAuth": { "id": "CONFIGURE_FRAPPE_SYNC_CREDENTIAL", "name": "Frappe AI Assistant Sync v2 - ENV" }
+        }
+      },
+      {
+        "parameters": {},
+        "id": "sync-manual",
+        "name": "Manual Shadow Sync",
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [-1280, 100]
+      },
+      {
+        "parameters": {
+          "url": "={{ $env.AI_FRAPPE_BASE_URL + '/api/method/hksr.ai_assistant.api.schema_catalog' }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              { "name": "Host", "value": "={{ $env.AI_FRAPPE_SITE_HOST }}" }
+            ]
+          },
+          "options": {}
+        },
+        "id": "fetch-catalog",
+        "name": "Fetch Schema-only Catalog",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [-1050, 0],
+        "onError": "continueErrorOutput",
+        "credentials": {
+          "httpHeaderAuth": { "id": "CONFIGURE_FRAPPE_SYNC_CREDENTIAL", "name": "Frappe AI Assistant Sync v2 - ENV" }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+            "conditions": [
+              {
+                "id": "catalog-complete-condition",
+                "leftValue": "={{ $json.message.complete ? 'yes' : 'no' }}",
+                "rightValue": "yes",
+                "operator": { "type": "string", "operation": "equals" }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "catalog-complete",
+        "name": "Catalog Run Complete",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [-820, 0]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $env.AI_SUPABASE_URL + '/rest/v1/rpc/list_erpnext_schema_hashes_v2' }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "supabaseApi",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ requested_site_id: $('Fetch Schema-only Catalog').first().json.message.site_id }) }}",
+          "options": {}
+        },
+        "id": "fetch-existing-hashes",
+        "name": "Fetch Existing Chunk Hashes",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [-590, -100],
+        "alwaysOutputData": true,
+        "onError": "continueErrorOutput",
+        "credentials": {
+          "supabaseApi": { "id": "CONFIGURE_SUPABASE_CREDENTIAL", "name": "Supabase Schema RAG v2 - ENV" }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const catalog = $('Fetch Schema-only Catalog').first().json.message;\nconst raw = $input.all().flatMap((item) => {\n  if (Array.isArray(item.json)) return item.json;\n  if (Array.isArray(item.json.body)) return item.json.body;\n  return item.json && item.json.doctype ? [item.json] : [];\n});\nconst existing = new Map(raw.map((row) => [`${row.doctype}\\u0000${row.chunk_id}`, row.content_hash]));\nconst desired = catalog.doctypes.flatMap((entry) => entry.chunks.map((chunk) => ({ site_id: catalog.site_id, doctype: entry.doctype, ...chunk })));\nconst desiredKeys = new Set(desired.map((chunk) => `${chunk.doctype}\\u0000${chunk.chunk_id}`));\nconst changed = desired.filter((chunk) => existing.get(`${chunk.doctype}\\u0000${chunk.chunk_id}`) !== chunk.content_hash);\nconst deleted = raw.filter((row) => !desiredKeys.has(`${row.doctype}\\u0000${row.chunk_id}`)).map((row) => ({ doctype: row.doctype, chunk_id: row.chunk_id }));\nreturn [{ json: { catalog, changed, deleted, hasChanges: changed.length ? 'yes' : 'no' } }];"
+        },
+        "id": "compare-catalog",
+        "name": "Compare Deterministic Hashes",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [-350, -100]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+            "conditions": [
+              {
+                "id": "changed-condition",
+                "leftValue": "={{ $json.hasChanges }}",
+                "rightValue": "yes",
+                "operator": { "type": "string", "operation": "equals" }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "has-changes",
+        "name": "Has Added or Changed Chunks",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [-110, -100]
+      },
+      {
+        "parameters": {
+          "jsCode": "return $json.changed.map((chunk) => ({ json: chunk }));"
+        },
+        "id": "changed-chunks",
+        "name": "Changed Schema Chunks",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [130, -220]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ 'https://generativelanguage.googleapis.com/v1beta/models/' + $env.AI_EMBEDDING_MODEL + ':embedContent' }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "googlePalmApi",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ model: 'models/' + $env.AI_EMBEDDING_MODEL, content: { parts: [{ text: 'title: ' + $json.doctype + ':' + $json.chunk_id + ' | text: ' + $json.content }] }, output_dimensionality: Number($env.AI_EMBEDDING_DIMENSIONS || 768) }) }}",
+          "options": {
+            "response": { "response": { "fullResponse": true, "neverError": true, "responseFormat": "autodetect" } }
+          }
+        },
+        "id": "embed-changed",
+        "name": "Embed Changed Chunks at 768",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [370, -220],
+        "onError": "continueRegularOutput",
+        "credentials": {
+          "googlePalmApi": { "id": "CONFIGURE_EMBEDDING_CREDENTIAL", "name": "Gemini Embedding v2 - ENV" }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const responses = $input.all();\nconst source = $('Changed Schema Chunks').all().map((item) => item.json);\nconst embedded = [];\nconst errors = [];\nfor (let index = 0; index < source.length; index++) {\n  const response = responses[index]?.json || {};\n  const status = Number(response.statusCode || 200);\n  const body = response.body || response;\n  const values = body?.embeddings?.[0]?.values || body?.embedding?.values;\n  if (status < 200 || status >= 300 || !Array.isArray(values) || values.length !== Number($env.AI_EMBEDDING_DIMENSIONS || 768)) {\n    errors.push(`${source[index].doctype}/${source[index].chunk_id}: embedding failed (${status})`);\n    continue;\n  }\n  embedded.push({ ...source[index], embedding: values, embedding_model: $env.AI_EMBEDDING_MODEL });\n}\nreturn [{ json: { route: errors.length ? 'error' : 'ok', error: errors.join('; ').slice(0, 4000), chunks: embedded } }];"
+        },
+        "id": "collect-embeddings",
+        "name": "Require Complete Embedding Batch",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [610, -220]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+            "conditions": [
+              {
+                "id": "embedding-health-condition",
+                "leftValue": "={{ $json.route }}",
+                "rightValue": "ok",
+                "operator": { "type": "string", "operation": "equals" }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "embeddings-healthy",
+        "name": "Embedding Batch Complete",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [850, -220]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $env.AI_SUPABASE_URL + '/rest/v1/rpc/apply_erpnext_schema_upserts_v2' }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "supabaseApi",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ requested_site_id: $('Fetch Schema-only Catalog').first().json.message.site_id, chunks: $json.chunks }) }}",
+          "options": {
+            "response": { "response": { "fullResponse": true, "neverError": true, "responseFormat": "autodetect" } }
+          }
+        },
+        "id": "atomic-upsert",
+        "name": "Atomic Upsert Changed Chunks",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [1090, -300],
+        "onError": "continueErrorOutput",
+        "credentials": {
+          "supabaseApi": { "id": "CONFIGURE_SUPABASE_CREDENTIAL", "name": "Supabase Schema RAG v2 - ENV" }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const status = Number($json.statusCode || 200);\nconst ok = status >= 200 && status < 300;\nreturn [{ json: { route: ok ? 'ok' : 'error', error: ok ? '' : `Atomic Supabase upsert failed (${status})` } }];"
+        },
+        "id": "check-upsert",
+        "name": "Check Atomic Upsert",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [1330, -300]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+            "conditions": [
+              {
+                "id": "upsert-health-condition",
+                "leftValue": "={{ $json.route }}",
+                "rightValue": "ok",
+                "operator": { "type": "string", "operation": "equals" }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "upsert-healthy",
+        "name": "Upsert Transaction Complete",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [1570, -300]
+      },
+      {
+        "parameters": {
+          "jsCode": "const comparison = $('Compare Deterministic Hashes').first().json;\nreturn [{ json: { ...comparison, hasDeleted: comparison.deleted.length ? 'yes' : 'no' } }];"
+        },
+        "id": "prepare-deletions",
+        "name": "Prepare Safe Stale Deletions",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [1810, -40]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+            "conditions": [
+              {
+                "id": "delete-condition",
+                "leftValue": "={{ $json.hasDeleted }}",
+                "rightValue": "yes",
+                "operator": { "type": "string", "operation": "equals" }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "has-stale",
+        "name": "Has Stale Chunks",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [2050, -40]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $env.AI_SUPABASE_URL + '/rest/v1/rpc/delete_erpnext_schema_chunks_v2' }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "supabaseApi",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ requested_site_id: $json.catalog.site_id, chunks: $json.deleted }) }}",
+          "options": {
+            "response": { "response": { "fullResponse": true, "neverError": true, "responseFormat": "autodetect" } }
+          }
+        },
+        "id": "atomic-delete",
+        "name": "Delete Stale Only After Success",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [2290, -120],
+        "onError": "continueErrorOutput",
+        "credentials": {
+          "supabaseApi": { "id": "CONFIGURE_SUPABASE_CREDENTIAL", "name": "Supabase Schema RAG v2 - ENV" }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const status = Number($json.statusCode || 200);\nconst ok = status >= 200 && status < 300;\nreturn [{ json: { route: ok ? 'ok' : 'error', error: ok ? '' : `Atomic stale deletion failed (${status})` } }];"
+        },
+        "id": "check-delete",
+        "name": "Check Atomic Delete",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [2530, -120]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+            "conditions": [
+              {
+                "id": "delete-health-condition",
+                "leftValue": "={{ $json.route }}",
+                "rightValue": "ok",
+                "operator": { "type": "string", "operation": "equals" }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "delete-healthy",
+        "name": "Delete Transaction Complete",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [2770, -120]
+      },
+      {
+        "parameters": {
+          "jsCode": "const comparison = $('Compare Deterministic Hashes').first().json;\nconst changedCount = comparison.changed.length;\nconst deletedCount = comparison.deleted.length;\nreturn [{ json: { result: { status: changedCount || deletedCount ? 'Drift' : 'Success', catalog_hash: comparison.catalog.catalog_hash, doctype_count: comparison.catalog.doctype_count, chunk_count: comparison.catalog.chunk_count, changed_count: changedCount, deleted_count: deletedCount, error: '' } } }];"
+        },
+        "id": "build-success",
+        "name": "Build Successful Sync Result",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [3010, 40]
+      },
+      {
+        "parameters": {
+          "jsCode": "let catalog = {};\nlet comparison = { changed: [], deleted: [] };\ntry { catalog = $('Fetch Schema-only Catalog').first().json.message || {}; } catch {}\ntry { comparison = $('Compare Deterministic Hashes').first().json || comparison; } catch {}\nconst rawError = $json.error || (typeof $json.message === 'string' ? $json.message : '') || '';\nlet error = typeof rawError === 'object' ? (rawError.message || JSON.stringify(rawError)) : String(rawError);\nif (!catalog.complete && Array.isArray(catalog.errors)) error = `Catalog incomplete: ${catalog.errors.map((entry) => `${entry.doctype}: ${entry.error}`).join('; ')}`;\nreturn [{ json: { result: { status: 'Error', catalog_hash: catalog.catalog_hash || '', doctype_count: catalog.doctype_count || 0, chunk_count: catalog.chunk_count || 0, changed_count: comparison.changed?.length || 0, deleted_count: 0, error: String(error || 'Schema synchronization failed before completion').slice(0, 4000) } } }];"
+        },
+        "id": "build-error",
+        "name": "Build Failed Sync Result",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [3010, -300]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $env.AI_FRAPPE_BASE_URL + '/api/method/hksr.ai_assistant.api.record_sync_result' }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              { "name": "Host", "value": "={{ $env.AI_FRAPPE_SITE_HOST }}" }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ result: JSON.stringify($json.result) }) }}",
+          "options": {}
+        },
+        "id": "record-result",
+        "name": "Record Result in ERPNext",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [3250, -120],
+        "credentials": {
+          "httpHeaderAuth": { "id": "CONFIGURE_FRAPPE_SYNC_CREDENTIAL", "name": "Frappe AI Assistant Sync v2 - ENV" }
+        }
+      }
+    ],
+    "connections": {
+      "Authenticated Sync Webhook": { "main": [[{ "node": "Fetch Schema-only Catalog", "type": "main", "index": 0 }]] },
+      "Manual Shadow Sync": { "main": [[{ "node": "Fetch Schema-only Catalog", "type": "main", "index": 0 }]] },
+      "Fetch Schema-only Catalog": {
+        "main": [
+          [{ "node": "Catalog Run Complete", "type": "main", "index": 0 }],
+          [{ "node": "Build Failed Sync Result", "type": "main", "index": 0 }]
+        ]
+      },
+      "Catalog Run Complete": {
+        "main": [
+          [{ "node": "Fetch Existing Chunk Hashes", "type": "main", "index": 0 }],
+          [{ "node": "Build Failed Sync Result", "type": "main", "index": 0 }]
+        ]
+      },
+      "Fetch Existing Chunk Hashes": {
+        "main": [
+          [{ "node": "Compare Deterministic Hashes", "type": "main", "index": 0 }],
+          [{ "node": "Build Failed Sync Result", "type": "main", "index": 0 }]
+        ]
+      },
+      "Compare Deterministic Hashes": { "main": [[{ "node": "Has Added or Changed Chunks", "type": "main", "index": 0 }]] },
+      "Has Added or Changed Chunks": {
+        "main": [
+          [{ "node": "Changed Schema Chunks", "type": "main", "index": 0 }],
+          [{ "node": "Prepare Safe Stale Deletions", "type": "main", "index": 0 }]
+        ]
+      },
+      "Changed Schema Chunks": { "main": [[{ "node": "Embed Changed Chunks at 768", "type": "main", "index": 0 }]] },
+      "Embed Changed Chunks at 768": { "main": [[{ "node": "Require Complete Embedding Batch", "type": "main", "index": 0 }]] },
+      "Require Complete Embedding Batch": { "main": [[{ "node": "Embedding Batch Complete", "type": "main", "index": 0 }]] },
+      "Embedding Batch Complete": {
+        "main": [
+          [{ "node": "Atomic Upsert Changed Chunks", "type": "main", "index": 0 }],
+          [{ "node": "Build Failed Sync Result", "type": "main", "index": 0 }]
+        ]
+      },
+      "Atomic Upsert Changed Chunks": {
+        "main": [
+          [{ "node": "Check Atomic Upsert", "type": "main", "index": 0 }],
+          [{ "node": "Build Failed Sync Result", "type": "main", "index": 0 }]
+        ]
+      },
+      "Check Atomic Upsert": { "main": [[{ "node": "Upsert Transaction Complete", "type": "main", "index": 0 }]] },
+      "Upsert Transaction Complete": {
+        "main": [
+          [{ "node": "Prepare Safe Stale Deletions", "type": "main", "index": 0 }],
+          [{ "node": "Build Failed Sync Result", "type": "main", "index": 0 }]
+        ]
+      },
+      "Prepare Safe Stale Deletions": { "main": [[{ "node": "Has Stale Chunks", "type": "main", "index": 0 }]] },
+      "Has Stale Chunks": {
+        "main": [
+          [{ "node": "Delete Stale Only After Success", "type": "main", "index": 0 }],
+          [{ "node": "Build Successful Sync Result", "type": "main", "index": 0 }]
+        ]
+      },
+      "Delete Stale Only After Success": {
+        "main": [
+          [{ "node": "Check Atomic Delete", "type": "main", "index": 0 }],
+          [{ "node": "Build Failed Sync Result", "type": "main", "index": 0 }]
+        ]
+      },
+      "Check Atomic Delete": { "main": [[{ "node": "Delete Transaction Complete", "type": "main", "index": 0 }]] },
+      "Delete Transaction Complete": {
+        "main": [
+          [{ "node": "Build Successful Sync Result", "type": "main", "index": 0 }],
+          [{ "node": "Build Failed Sync Result", "type": "main", "index": 0 }]
+        ]
+      },
+      "Build Successful Sync Result": { "main": [[{ "node": "Record Result in ERPNext", "type": "main", "index": 0 }]] },
+      "Build Failed Sync Result": { "main": [[{ "node": "Record Result in ERPNext", "type": "main", "index": 0 }]] }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "saveDataErrorExecution": "none",
+      "saveDataSuccessExecution": "none",
+      "saveExecutionProgress": false,
+      "saveManualExecutions": false
+    },
+    "versionId": "182a091d-b21f-4c72-a482-c15602cc8ef8",
+    "meta": { "templateCredsSetupCompleted": false },
+    "tags": []
+  }
+]

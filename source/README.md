@@ -1,0 +1,52 @@
+# Public-safe implementation source
+
+This directory is a sanitized backup of the implemented ERPNext AI Assistant
+v2 source. Production credential values were never part of this copy.
+Environment-specific hostnames, webhook examples, namespaces, paths, and
+container defaults were replaced with examples or required environment
+variables before publication.
+
+## Contents
+
+- `hksr_overlay/` — Frappe authentication, session validation, schema catalog,
+  QueryPlanV1 validation/execution, synchronization, Settings DocTypes, secure
+  Desk loader, acceptance Page, and tests.
+- `n8n/workflows/` — inactive generic templates for schema sync, permissioned
+  query, and authenticated chat. Credential references remain `CONFIGURE_*`
+  placeholders.
+- `n8n/render_workflows.sh` — environment renderer for template placeholders.
+- `n8n/docker-compose.v2.yml` — pinned n8n/Redis example using environment-
+  supplied persistent paths and host configuration.
+- `supabase/` — pgvector schema/RPC migrations and vector-schema detection.
+- `apache/` — idempotent exact-route apply/verify/rollback helper using example
+  host defaults.
+- `deploy_shadow_backend.sh` — recoverable Frappe overlay deployment helper with
+  generic public path defaults.
+- `install_operations_source.sh` — documentation/runtime installation helper
+  with generic public path defaults.
+- `uat/` — UAT deployment and non-secret environment examples with sanitized
+  defaults.
+- `tests/` — static syntax and security-contract checks.
+
+## Intentionally excluded
+
+- `production.env`;
+- `workflows.rendered.json`;
+- n8n workflow exports and execution data;
+- credential exports, IDs, fingerprints, or encrypted inventories;
+- production webhook IDs, hostnames, Supabase project URLs, and backup paths;
+- Python bytecode and runtime staging files; and
+- Apache virtual-host copies, databases, logs, or container data.
+
+## Before deployment
+
+1. Review every example path, host, network, and container name for the target
+   environment.
+2. Create the Frappe, Gemini generative, Gemini embedding, Supabase, and Redis
+   credentials in managed stores.
+3. Render fresh workflow IDs and credential references per environment.
+4. Keep the workflow templates inactive until bindings and negative tests pass.
+5. Run `tests/test_static_contracts.sh`.
+6. Follow the operations and acceptance documents in the repository root.
+
+Never deploy this public copy by blindly reusing example values.

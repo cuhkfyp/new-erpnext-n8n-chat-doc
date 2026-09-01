@@ -1,0 +1,190 @@
+[
+  {
+    "id": "864c5c0c-c20a-4aba-9587-68d56e529bf8",
+    "name": "ERPNext AI Chat Assistant v2",
+    "active": false,
+    "nodes": [
+      {
+        "parameters": {
+          "public": true,
+          "mode": "webhook",
+          "options": { "loadPreviousSession": "notSupported" }
+        },
+        "id": "chat-trigger-v2",
+        "name": "Authenticated Chat Trigger v2",
+        "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+        "typeVersion": 1.1,
+        "position": [-640, 0],
+        "webhookId": "__AI_CHAT_WEBHOOK_ID__"
+      },
+      {
+        "parameters": {
+          "jsCode": "const metadata = $json.metadata;\nconst sessionToken = metadata?.aiSessionToken;\nconst sessionId = $json.sessionId;\nconst metadataSessionId = metadata?.aiSessionId;\nif ($json.action !== 'sendMessage' || typeof $json.chatInput !== 'string' || !$json.chatInput.trim()) throw new Error('A valid chat message is required.');\nif (typeof sessionToken !== 'string' || sessionToken.length < 32 || sessionToken.length > 256) throw new Error('A valid ERPNext browser session is required.');\nif (typeof sessionId !== 'string' || sessionId.length < 24 || sessionId.length > 256 || sessionId !== metadataSessionId) throw new Error('A valid ERPNext browser session is required.');\nreturn [{ json: { ...$json, sessionToken, sessionId } }];"
+        },
+        "id": "capture-auth",
+        "name": "Capture Browser Auth Context",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [-410, 0]
+      },
+      {
+        "parameters": {
+          "url": "={{ $env.AI_FRAPPE_BASE_URL + '/api/method/hksr.ai_assistant.api.validate_session' }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              { "name": "Host", "value": "={{ $env.AI_FRAPPE_SITE_HOST }}" },
+              { "name": "X-AI-Assistant-Token", "value": "={{ $json.sessionToken }}" },
+              { "name": "X-AI-Assistant-Session", "value": "={{ $json.sessionId }}" }
+            ]
+          },
+          "options": {}
+        },
+        "id": "validate-chat-session",
+        "name": "Validate Frappe Session Before Gemini",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [-170, 0]
+      },
+      {
+        "parameters": {
+          "jsCode": "const input = $('Capture Browser Auth Context').first().json;\nconst question = input.chatInput.trim();\nconst hasChinese = /[\\u3400-\\u9fff]/.test(question);\nconst rawSql = /```(?:sql|mysql|mariadb|postgresql)?/i.test(question) || /(?:^|[\\s;(])(?:select\\s+.+?\\s+from|insert\\s+into|update\\s+[^\\s;]+\\s+set|delete\\s+from|drop\\s+(?:table|database)|alter\\s+table|truncate\\s+table|create\\s+(?:table|database|index)|grant\\s+|revoke\\s+|merge\\s+into|exec(?:ute)?\\s+|call\\s+)/is.test(question) || /\\b(?:from|join)\\s+[`\\\"']?(?:tab[A-Za-z0-9_]+|__[A-Za-z0-9_]+)/i.test(question) || /\\b(?:union\\s+select|information_schema|pg_catalog|frappe\\.db\\.sql|cursor\\.execute)\\b/i.test(question);\nconst writeIntent = /^(?:please\\s+)?(?:delete|remove|erase|update|change|edit|modify|insert|create|add|write|set)\\b/i.test(question) || /\\b(?:can|could|would|will)\\s+you\\s+(?:please\\s+)?(?:delete|remove|erase|update|change|edit|modify|insert|create|add|write|set)\\b/i.test(question) || /^(?:請|请)?(?:刪除|删除|移除|更新|修改|新增|建立|创建|寫入|写入)/.test(question);\nconst sensitiveRequest = /\\b(?:password|passphrase|api[ -]?key|secret|access[ -]?token|session[ -]?id|credential|cookie)\\b/i.test(question) || /(?:密碼|密码|口令|金鑰|金钥|密鑰|密钥|秘鑰|秘钥|權杖|令牌|憑證|凭证)/.test(question);\nconst injectionAttempt = /\\b(?:ignore|disregard|override|bypass)\\b.{0,50}\\b(?:instruction|prompt|permission|security|policy|rule)\\b/is.test(question) || /\\b(?:jailbreak|act as (?:an? )?(?:administrator|admin|root)|developer mode)\\b/i.test(question) || /(?:忽略|繞過|绕过).{0,30}(?:指令|權限|权限|安全|規則|规则)/.test(question);\nlet rejection = '';\nif (rawSql) {\n  rejection = hasChinese\n    ? '基於安全考慮，我不能執行原始 SQL，也不能把系統資料表改寫成其他允許的資料查詢。請用自然語言詢問「Schema DocType Allowlist」中已啟用的業務資料。'\n    : 'For security, I cannot execute raw SQL or redirect a system-table request to other allowed data. Ask in natural language about business data enabled in the Schema DocType Allowlist.';\n} else if (writeIntent) {\n  rejection = hasChinese\n    ? '此助理只提供唯讀查詢，不能新增、修改或刪除 ERPNext 資料。'\n    : 'This assistant is read-only and cannot create, change, or delete ERPNext data.';\n} else if (sensitiveRequest) {\n  rejection = hasChinese\n    ? '我不能擷取或透露密碼、API 金鑰、權杖、Cookie 或其他憑證。'\n    : 'I cannot retrieve or disclose passwords, API keys, tokens, cookies, or other credentials.';\n} else if (injectionAttempt) {\n  rejection = hasChinese\n    ? '此要求嘗試繞過助理的安全或權限規則，因此已被拒絕。'\n    : 'This request attempts to bypass assistant safety or permission rules and was rejected.';\n}\nreturn [{ json: { route: rejection ? 'reject' : 'allow', rejection } }];"
+        },
+        "id": "gate-unsafe-chat-request",
+        "name": "Gate Unsafe Chat Request",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [70, 0]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+            "conditions": [
+              {
+                "id": "unsafe-chat-route-condition",
+                "leftValue": "={{ $json.route }}",
+                "rightValue": "reject",
+                "operator": { "type": "string", "operation": "equals" }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "route-unsafe-chat-request",
+        "name": "Unsafe Chat Request?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [300, 0]
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: { output: $json.rejection } }];"
+        },
+        "id": "return-safe-rejection",
+        "name": "Return Safe Rejection",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [540, -120]
+      },
+      {
+        "parameters": {
+          "agent": "conversationalAgent",
+          "promptType": "define",
+          "text": "={{ $('Capture Browser Auth Context').first().json.chatInput }}",
+          "options": {
+            "systemMessage": "You are the permission-aware ERPNext AI Assistant. Answer in the user's language (Traditional Chinese or English). For greetings or general conversation, answer naturally. For any safe request about ERPNext records, counts, aggregates, groups, or lists, call the permissioned_erpnext_query tool with the user's natural-language question. Never invent results, SQL, fields, permissions, credentials, or data from a different DocType. Never ask the tool to write data. If a requested DocType or field is unavailable, say it is not enabled or permitted; do not substitute the nearest available schema. Explain empty results clearly and preserve any truncation notice returned by the tool."
+          }
+        },
+        "id": "permission-aware-agent",
+        "name": "Permission-aware ERPNext Agent",
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 1.7,
+        "position": [540, 100]
+      },
+      {
+        "parameters": {
+          "modelName": "={{ 'models/' + $env.AI_GENERATIVE_MODEL }}",
+          "options": { "temperature": 0.1 }
+        },
+        "id": "chat-model-v2",
+        "name": "Gemini Generative v2",
+        "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+        "typeVersion": 1.1,
+        "position": [410, 320],
+        "credentials": {
+          "googlePalmApi": { "id": "CONFIGURE_GENERATIVE_CREDENTIAL", "name": "Gemini Generative v2 - ENV" }
+        }
+      },
+      {
+        "parameters": {
+          "sessionKey": "={{ $('Capture Browser Auth Context').first().json.sessionId }}",
+          "sessionTTL": 28800
+        },
+        "id": "redis-memory-v2",
+        "name": "Opaque Session Redis Memory",
+        "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+        "typeVersion": 1.1,
+        "position": [560, 320],
+        "credentials": {
+          "redis": { "id": "CONFIGURE_REDIS_CREDENTIAL", "name": "Redis (n8n-redis)" }
+        }
+      },
+      {
+        "parameters": {
+          "name": "permissioned_erpnext_query",
+          "description": "Read ERPNext data through a validated QueryPlanV1. Frappe enforces the current browser user's DocType, field, and row permissions. Pass the user's natural-language data question only.",
+          "workflowId": {
+            "value": "6379b1c3-ceda-45b8-9056-9af98f0e1938",
+            "__rl": true,
+            "mode": "id"
+          },
+          "fields": {
+            "values": [
+              {
+                "name": "query",
+                "stringValue": "={{ $fromAI('query', 'The user natural-language ERPNext data question', 'string') }}"
+              },
+              { "name": "sessionToken", "stringValue": "={{ $('Capture Browser Auth Context').first().json.sessionToken }}" },
+              { "name": "sessionId", "stringValue": "={{ $('Capture Browser Auth Context').first().json.sessionId }}" },
+              { "name": "siteId", "stringValue": "={{ $('Validate Frappe Session Before Gemini').first().json.message.site_id }}" }
+            ]
+          }
+        },
+        "id": "permissioned-query-tool",
+        "name": "Permissioned ERPNext Query Tool",
+        "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+        "typeVersion": 1.3,
+        "position": [730, 320]
+      }
+    ],
+    "connections": {
+      "Authenticated Chat Trigger v2": { "main": [[{ "node": "Capture Browser Auth Context", "type": "main", "index": 0 }]] },
+      "Capture Browser Auth Context": { "main": [[{ "node": "Validate Frappe Session Before Gemini", "type": "main", "index": 0 }]] },
+      "Validate Frappe Session Before Gemini": { "main": [[{ "node": "Gate Unsafe Chat Request", "type": "main", "index": 0 }]] },
+      "Gate Unsafe Chat Request": { "main": [[{ "node": "Unsafe Chat Request?", "type": "main", "index": 0 }]] },
+      "Unsafe Chat Request?": {
+        "main": [
+          [{ "node": "Return Safe Rejection", "type": "main", "index": 0 }],
+          [{ "node": "Permission-aware ERPNext Agent", "type": "main", "index": 0 }]
+        ]
+      },
+      "Gemini Generative v2": { "ai_languageModel": [[{ "node": "Permission-aware ERPNext Agent", "type": "ai_languageModel", "index": 0 }]] },
+      "Opaque Session Redis Memory": { "ai_memory": [[{ "node": "Permission-aware ERPNext Agent", "type": "ai_memory", "index": 0 }]] },
+      "Permissioned ERPNext Query Tool": { "ai_tool": [[{ "node": "Permission-aware ERPNext Agent", "type": "ai_tool", "index": 0 }]] }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "callerPolicy": "workflowsFromSameOwner",
+      "saveDataErrorExecution": "none",
+      "saveDataSuccessExecution": "none",
+      "saveExecutionProgress": false,
+      "saveManualExecutions": false,
+      "availableInMCP": false
+    },
+    "versionId": "e2868982-2bd6-4c98-a11e-6b61cd3f05e7",
+    "meta": { "templateCredsSetupCompleted": false },
+    "tags": []
+  }
+]

@@ -1,0 +1,72 @@
+# Shadow-safe n8n runtime for ERPNext AI Assistant v2.
+networks:
+  frappe_network:
+    external: true
+    name: ${FRAPPE_NETWORK_NAME:-frappe_network}
+  vpn_network:
+    external: true
+    name: ${VPN_NETWORK_NAME:-vpn_proxy_network}
+
+volumes:
+  n8n_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${N8N_DATA_DIR:?Set N8N_DATA_DIR to an absolute persistent path}
+
+services:
+  n8n-redis:
+    image: redis:7-alpine
+    container_name: n8n-redis
+    restart: unless-stopped
+    networks:
+      - frappe_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:2.21.7
+    container_name: n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    networks:
+      - frappe_network
+      - vpn_network
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ${N8N_WEBHOOK_HELPERS_PATH:?Set N8N_WEBHOOK_HELPERS_PATH}:/usr/local/lib/node_modules/n8n/dist/webhooks/webhook-helpers.js:ro
+    environment:
+      N8N_HOST: ${N8N_HOST:-n8n.example.com}
+      N8N_PORT: 5678
+      N8N_PROTOCOL: https
+      WEBHOOK_URL: ${N8N_WEBHOOK_URL:-https://n8n.example.com/}
+      N8N_EDITOR_BASE_URL: ${N8N_EDITOR_BASE_URL:-https://n8n.example.com/}
+      DB_TYPE: sqlite
+      N8N_SECURE_COOKIE: "${N8N_SECURE_COOKIE:-false}"
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+      # v2 expressions read only the non-secret AI_* values below. Service
+      # secrets stay in n8n credentials and are never placed in the environment.
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+      GENERIC_TIMEZONE: Asia/Hong_Kong
+      TZ: Asia/Hong_Kong
+
+      HTTP_PROXY: http://${VPN_PROXY_HOST:-vpn-proxy}:${VPN_PROXY_PORT:-8888}
+      HTTPS_PROXY: http://${VPN_PROXY_HOST:-vpn-proxy}:${VPN_PROXY_PORT:-8888}
+      NO_PROXY: ${N8N_NO_PROXY:-localhost,127.0.0.1,frappe-db,frappe-frontend,frappe-backend,n8n-redis}
+      NODE_OPTIONS: "--require /home/node/.n8n/proxy_setup.js"
+      N8N_LOG_LEVEL: ${N8N_LOG_LEVEL:-debug}
+
+      # Non-secret v2 environment contract. Credential values stay in n8n.
+      AI_ENVIRONMENT: ${AI_ENVIRONMENT:-production}
+      AI_FRAPPE_BASE_URL: ${AI_FRAPPE_BASE_URL:-http://frappe-frontend:8080}
+      AI_FRAPPE_SITE_HOST: ${AI_FRAPPE_SITE_HOST:-frontend}
+      AI_SUPABASE_URL: ${AI_SUPABASE_URL:-https://configure-this-environment.invalid}
+      AI_EMBEDDING_MODEL: ${AI_EMBEDDING_MODEL:-gemini-embedding-2}
+      AI_EMBEDDING_DIMENSIONS: "768"
+      AI_GENERATIVE_MODEL: ${AI_GENERATIVE_MODEL:-gemini-2.5-flash}
+      AI_SCHEMA_MATCH_COUNT: ${AI_SCHEMA_MATCH_COUNT:-8}

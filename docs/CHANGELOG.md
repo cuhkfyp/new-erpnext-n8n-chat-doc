@@ -35,3 +35,8 @@
   credential reference.
 - Updated the tracked and persistent implementation, n8n operations, and UAT
   documentation.
+- Added a public-safe source backup containing the Frappe backend and Desk UI,
+  generic n8n workflow templates, Supabase migrations, proxy/runtime helpers,
+  UAT examples, and static contract tests. Environment-rendered workflows,
+  production configuration, bytecode, credentials, and runtime artifacts were
+  excluded.

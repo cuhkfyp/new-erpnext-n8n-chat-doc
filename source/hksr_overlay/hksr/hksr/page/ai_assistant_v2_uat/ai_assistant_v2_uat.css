@@ -1,0 +1,106 @@
+body.ai-assistant-v2-uat-open #n8n-chat {
+	display: none !important;
+}
+
+.ai-assistant-v2-uat {
+	display: grid;
+	gap: 12px;
+	padding: 16px;
+}
+
+.ai-assistant-v2-uat-status {
+	margin: 0;
+}
+
+.ai-assistant-v2-uat-help {
+	color: var(--text-muted);
+	font-size: var(--text-sm);
+}
+
+.ai-assistant-v2-uat-chat {
+	box-sizing: border-box;
+	min-height: 520px;
+	height: clamp(520px, calc(100dvh - 300px), 760px);
+	overflow: hidden;
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-lg);
+	background: var(--card-bg);
+}
+
+.ai-assistant-v2-uat-chat .n8n-chat {
+	height: 100%;
+	min-height: 0;
+}
+
+/*
+ * Keep @n8n/chat's header, scroll body, and composer in explicit rows. Frappe
+ * Desk's surrounding flex layout can otherwise let the final bubble extend
+ * below the body and underneath the composer.
+ */
+.ai-assistant-v2-uat-chat .chat-layout {
+	display: grid;
+	grid-template-rows: max-content minmax(0, 1fr) max-content;
+	align-items: stretch;
+	height: 100%;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.ai-assistant-v2-uat-chat .chat-header,
+.ai-assistant-v2-uat-chat .chat-footer {
+	flex: 0 0 auto;
+	min-width: 0;
+}
+
+.ai-assistant-v2-uat-chat .chat-header {
+	grid-row: 1;
+}
+
+.ai-assistant-v2-uat-chat .chat-body {
+	grid-row: 2;
+	flex: none;
+	height: auto !important;
+	block-size: auto !important;
+	max-height: none !important;
+	min-height: 0;
+	scroll-padding-bottom: calc(var(--chat--spacing) + var(--chat--textarea--height) + 12px);
+	overflow-y: auto;
+}
+
+.ai-assistant-v2-uat-chat .chat-footer {
+	grid-row: 3;
+	position: relative;
+	z-index: 2;
+}
+
+.ai-assistant-v2-uat-chat .chat-messages-list {
+	box-sizing: border-box;
+	display: block;
+	width: 100%;
+	min-height: 0;
+	margin-top: 0;
+	padding-bottom: var(--chat--spacing);
+}
+
+/*
+ * Use a real final block in the list's scroll geometry. In this n8n build,
+ * bottom padding alone can leave the last message flush with (or a few pixels
+ * beneath) the composer even when scrollTop is at its apparent maximum.
+ */
+.ai-assistant-v2-uat-chat .chat-messages-list::after {
+	content: "";
+	display: block;
+	width: 100%;
+	height: calc(var(--chat--spacing) + 12px);
+	pointer-events: none;
+}
+
+@media (max-width: 767px) {
+	.ai-assistant-v2-uat {
+		padding: 8px 0;
+	}
+
+	.ai-assistant-v2-uat-chat {
+		height: max(520px, calc(100dvh - 250px));
+	}
+}

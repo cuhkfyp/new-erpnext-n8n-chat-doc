@@ -2,6 +2,8 @@
 *.env
 *.env.*
 !.env.example
+!**/*.env.example
+!**/*.env.*.example
 *credentials*
 *secret*
 *token*
@@ -14,3 +16,5 @@ private_security/
 *.sqlite-*
 *.db
 *.log
+__pycache__/
+*.py[cod]

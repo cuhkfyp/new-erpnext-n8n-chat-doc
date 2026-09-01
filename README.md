@@ -4,10 +4,11 @@ Public-safe documentation backup for the secured ERPNext AI Assistant v2
 implementation completed and verified on 2026-09-01.
 
 This repository documents the design, implementation changes, operating
-procedures, acceptance tests, and rollback controls. It is intentionally not a
-deployment bundle. Secret values, credential IDs, internal hostnames, webhook
-IDs, browser tokens, database exports, workflow exports, and legacy key
-fingerprints are excluded because this repository is public.
+procedures, acceptance tests, and rollback controls. It also contains the
+public-safe implementation source. Secret values, credential IDs, internal
+hostnames, webhook IDs, browser tokens, database exports, rendered workflow
+exports, and legacy key fingerprints are excluded because this repository is
+public.
 
 ## Documents
 
@@ -16,6 +17,7 @@ fingerprints are excluded because this repository is public.
 - [Acceptance and security tests](docs/ACCEPTANCE_TESTS.md)
 - [Supabase 768-dimensional schema notes](docs/SUPABASE_SCHEMA.md)
 - [Change log](docs/CHANGELOG.md)
+- [Public-safe source bundle](source/README.md)
 
 ## Current state at backup time
 

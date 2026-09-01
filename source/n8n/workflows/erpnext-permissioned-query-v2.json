@@ -1,0 +1,185 @@
+[
+  {
+    "id": "6379b1c3-ceda-45b8-9056-9af98f0e1938",
+    "name": "ERPNext Permissioned Query v2",
+    "active": false,
+    "nodes": [
+      {
+        "parameters": { "inputSource": "passthrough" },
+        "id": "query-input",
+        "name": "Permissioned Query Input",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [-1100, 0]
+      },
+      {
+        "parameters": {
+          "url": "={{ $env.AI_FRAPPE_BASE_URL + '/api/method/hksr.ai_assistant.api.validate_session' }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              { "name": "Host", "value": "={{ $env.AI_FRAPPE_SITE_HOST }}" },
+              { "name": "X-AI-Assistant-Token", "value": "={{ $json.sessionToken }}" },
+              { "name": "X-AI-Assistant-Session", "value": "={{ $json.sessionId }}" }
+            ]
+          },
+          "options": {}
+        },
+        "id": "validate-query-session",
+        "name": "Validate Session Before Retrieval",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [-880, 0]
+      },
+      {
+        "parameters": {
+          "jsCode": "const input = $('Permissioned Query Input').first().json;\nconst question = typeof input.query === 'string' ? input.query.trim() : '';\nif (!question) throw new Error('A natural-language read request is required.');\nconst rawSql = /```(?:sql|mysql|mariadb|postgresql)?/i.test(question) || /(?:^|[\\s;(])(?:select\\s+.+?\\s+from|insert\\s+into|update\\s+[^\\s;]+\\s+set|delete\\s+from|drop\\s+(?:table|database)|alter\\s+table|truncate\\s+table|create\\s+(?:table|database|index)|grant\\s+|revoke\\s+|merge\\s+into|exec(?:ute)?\\s+|call\\s+)/is.test(question) || /\\b(?:from|join)\\s+[`\\\"']?(?:tab[A-Za-z0-9_]+|__[A-Za-z0-9_]+)/i.test(question) || /\\b(?:union\\s+select|information_schema|pg_catalog|frappe\\.db\\.sql|cursor\\.execute)\\b/i.test(question);\nconst writeIntent = /^(?:please\\s+)?(?:delete|remove|erase|update|change|edit|modify|insert|create|add|write|set)\\b/i.test(question) || /^(?:請|请)?(?:刪除|删除|移除|更新|修改|新增|建立|创建|寫入|写入)/.test(question);\nconst sensitiveRequest = /\\b(?:password|passphrase|api[ -]?key|secret|access[ -]?token|session[ -]?id|credential|cookie)\\b/i.test(question) || /(?:密碼|密码|口令|金鑰|金钥|密鑰|密钥|秘鑰|秘钥|權杖|令牌|憑證|凭证)/.test(question);\nconst injectionAttempt = /\\b(?:ignore|disregard|override|bypass)\\b.{0,50}\\b(?:instruction|prompt|permission|security|policy|rule)\\b/is.test(question) || /\\b(?:jailbreak|act as (?:an? )?(?:administrator|admin|root)|developer mode)\\b/i.test(question);\nif (rawSql || writeIntent || sensitiveRequest || injectionAttempt) throw new Error('Only safe natural-language, read-only ERPNext questions are accepted.');\nreturn [{ json: { question } }];"
+        },
+        "id": "validate-natural-language-read",
+        "name": "Validate Natural-language Read Request",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [-650, 0]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ 'https://generativelanguage.googleapis.com/v1beta/models/' + $env.AI_EMBEDDING_MODEL + ':embedContent' }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "googlePalmApi",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ model: 'models/' + $env.AI_EMBEDDING_MODEL, content: { parts: [{ text: 'task: question answering | query: ' + $('Permissioned Query Input').first().json.query }] }, output_dimensionality: Number($env.AI_EMBEDDING_DIMENSIONS || 768) }) }}",
+          "options": {}
+        },
+        "id": "query-embedding",
+        "name": "Gemini Query Embedding 768",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [-410, 0],
+        "credentials": {
+          "googlePalmApi": { "id": "CONFIGURE_EMBEDDING_CREDENTIAL", "name": "Gemini Embedding v2 - ENV" }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $env.AI_SUPABASE_URL + '/rest/v1/rpc/match_erpnext_schema_v2' }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "supabaseApi",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ query_embedding: ($json.embeddings?.[0]?.values || $json.embedding?.values), match_site_id: $('Validate Session Before Retrieval').first().json.message.site_id, match_count: Number($env.AI_SCHEMA_MATCH_COUNT || 8) }) }}",
+          "options": {}
+        },
+        "id": "schema-search",
+        "name": "Search Environment Schema",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [-170, 0],
+        "credentials": {
+          "supabaseApi": { "id": "CONFIGURE_SUPABASE_CREDENTIAL", "name": "Supabase Schema RAG v2 - ENV" }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const question = $('Validate Natural-language Read Request').first().json.question;\nconst matches = $input.all().flatMap((item) => Array.isArray(item.json) ? item.json : [item.json]);\nif (!matches.length) throw new Error('No allowlisted schema metadata matched this question.');\nconst schema = matches.map((row) => row.content).filter(Boolean).join('\\n\\n---\\n\\n');\nconst contract = { version: '1', doctype: 'ONE allowlisted DocType', fields: ['fieldname'], filters: [{ field: 'fieldname', operator: '=', value: 'value' }], order_by: [{ field: 'fieldname', direction: 'asc' }], offset: 0, limit: 20, aggregates: [{ function: 'count|sum|average|minimum|maximum', field: '* or fieldname' }], group_by: ['fieldname'] };\nconst prompt = `Convert the user's ERPNext data question into QueryPlanV1 JSON. Return JSON only. Never return SQL, code, writes, joins, expressions, or more than one DocType. Use only DocTypes and fields present in the supplied schema. Resolve ordinary natural-language business names, translated labels, and abbreviations against the supplied DocType name, label, and description; for example, a business phrase may validly refer to an allowlisted DocType without using its exact technical name. Do not invent an unrelated DocType or field. Supported filter operators: =, !=, >, >=, <, <=, in, not in, like, not like, between, is. Keep limit at or below 100. For ordinary lists omit aggregates and group_by. For aggregates, fields may contain only group_by fields. Contract example: ${JSON.stringify(contract)}\\n\\nSCHEMA METADATA ONLY:\\n${schema}\\n\\nUSER QUESTION:\\n${question}`;\nreturn [{ json: { prompt } }];"
+        },
+        "id": "build-plan-prompt",
+        "name": "Build QueryPlanV1 Prompt",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [70, 0]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ 'https://generativelanguage.googleapis.com/v1beta/models/' + $env.AI_GENERATIVE_MODEL + ':generateContent' }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "googlePalmApi",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ contents: [{ parts: [{ text: $json.prompt }] }], generationConfig: { temperature: 0, responseMimeType: 'application/json' } }) }}",
+          "options": {}
+        },
+        "id": "generate-query-plan",
+        "name": "Gemini Generate QueryPlanV1",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [310, 0],
+        "credentials": {
+          "googlePalmApi": { "id": "CONFIGURE_GENERATIVE_CREDENTIAL", "name": "Gemini Generative v2 - ENV" }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const text = $json?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || '';\nconst cleaned = text.trim().replace(/^```(?:json)?\\s*/i, '').replace(/\\s*```$/, '');\nlet plan;\ntry { plan = JSON.parse(cleaned); } catch { throw new Error('Gemini did not return valid QueryPlanV1 JSON.'); }\nif (!plan || Array.isArray(plan) || typeof plan !== 'object') throw new Error('QueryPlanV1 must be a JSON object.');\nconst input = $('Permissioned Query Input').first().json;\nreturn [{ json: { queryPlan: JSON.stringify(plan), sessionToken: input.sessionToken, sessionId: input.sessionId } }];"
+        },
+        "id": "parse-query-plan",
+        "name": "Parse Strict JSON Plan",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [550, 0]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $env.AI_FRAPPE_BASE_URL + '/api/method/hksr.ai_assistant.api.execute_query_plan' }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              { "name": "Host", "value": "={{ $env.AI_FRAPPE_SITE_HOST }}" },
+              { "name": "X-AI-Assistant-Token", "value": "={{ $json.sessionToken }}" },
+              { "name": "X-AI-Assistant-Session", "value": "={{ $json.sessionId }}" }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ query_plan: $json.queryPlan }) }}",
+          "options": {}
+        },
+        "id": "execute-permissioned-plan",
+        "name": "Frappe Execute Permissioned Plan",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [790, 0]
+      },
+      {
+        "parameters": {
+          "jsCode": "const result = $json.message;\nif (!result || !Array.isArray(result.rows)) throw new Error('Frappe returned an invalid query result.');\nlet notice = '';\nif (result.truncated) notice = ` Results were truncated to ${result.limit} rows; ask for the next page using offset ${result.offset + result.limit}.`;\nreturn [{ json: { output: JSON.stringify({ ...result, notice }) } }];"
+        },
+        "id": "format-query-result",
+        "name": "Return Permissioned Result",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [1030, 0]
+      }
+    ],
+    "connections": {
+      "Permissioned Query Input": { "main": [[{ "node": "Validate Session Before Retrieval", "type": "main", "index": 0 }]] },
+      "Validate Session Before Retrieval": { "main": [[{ "node": "Validate Natural-language Read Request", "type": "main", "index": 0 }]] },
+      "Validate Natural-language Read Request": { "main": [[{ "node": "Gemini Query Embedding 768", "type": "main", "index": 0 }]] },
+      "Gemini Query Embedding 768": { "main": [[{ "node": "Search Environment Schema", "type": "main", "index": 0 }]] },
+      "Search Environment Schema": { "main": [[{ "node": "Build QueryPlanV1 Prompt", "type": "main", "index": 0 }]] },
+      "Build QueryPlanV1 Prompt": { "main": [[{ "node": "Gemini Generate QueryPlanV1", "type": "main", "index": 0 }]] },
+      "Gemini Generate QueryPlanV1": { "main": [[{ "node": "Parse Strict JSON Plan", "type": "main", "index": 0 }]] },
+      "Parse Strict JSON Plan": { "main": [[{ "node": "Frappe Execute Permissioned Plan", "type": "main", "index": 0 }]] },
+      "Frappe Execute Permissioned Plan": { "main": [[{ "node": "Return Permissioned Result", "type": "main", "index": 0 }]] }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "callerPolicy": "workflowsFromSameOwner",
+      "saveDataErrorExecution": "none",
+      "saveDataSuccessExecution": "none",
+      "saveExecutionProgress": false,
+      "saveManualExecutions": false
+    },
+    "versionId": "55f897f8-2bad-4bf4-a39f-4d2139dfd328",
+    "meta": { "templateCredsSetupCompleted": false },
+    "tags": []
+  }
+]

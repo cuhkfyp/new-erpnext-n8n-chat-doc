@@ -1,0 +1,187 @@
+{
+ "actions": [],
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "enabled",
+  "configuration_section",
+  "site_identifier",
+  "webhook_url",
+  "column_break_configuration",
+  "schema_sync_url",
+  "integration_secret",
+  "query_limits_section",
+  "default_result_limit",
+  "maximum_result_limit",
+  "allowlist_section",
+  "allowed_doctypes",
+  "sync_status_section",
+  "last_sync_status",
+  "last_sync_started_at",
+  "last_sync_completed_at",
+  "last_sync_catalog_hash",
+  "last_sync_doctype_count",
+  "last_sync_chunk_count",
+  "last_sync_changed_count",
+  "last_sync_deleted_count",
+  "last_sync_error",
+  "defaults_seeded"
+ ],
+ "fields": [
+  {
+   "default": "0",
+   "description": "Fail-closed master switch. Configure and test shadow workflows before enabling.",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled"
+  },
+  {
+   "fieldname": "configuration_section",
+   "fieldtype": "Section Break",
+   "label": "Environment Configuration"
+  },
+  {
+   "description": "Non-secret namespace unique to this environment, for example example-prod. site_config.json ai_assistant_site_id takes precedence.",
+   "fieldname": "site_identifier",
+   "fieldtype": "Data",
+   "label": "Site Identifier"
+  },
+  {
+   "description": "Same-origin browser path only. site_config.json ai_assistant_webhook_url takes precedence.",
+   "fieldname": "webhook_url",
+   "fieldtype": "Data",
+   "label": "Webhook URL"
+  },
+  {
+   "fieldname": "column_break_configuration",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Internal n8n schema-sync webhook. site_config.json ai_assistant_sync_url takes precedence.",
+   "fieldname": "schema_sync_url",
+   "fieldtype": "Data",
+   "label": "Schema Sync URL"
+  },
+  {
+   "description": "Shared only with the matching n8n Header Auth credential. Frappe stores Password fields encrypted.",
+   "fieldname": "integration_secret",
+   "fieldtype": "Password",
+   "label": "Integration Secret"
+  },
+  {
+   "fieldname": "query_limits_section",
+   "fieldtype": "Section Break",
+   "label": "Permissioned Query Limits"
+  },
+  {
+   "default": "20",
+   "fieldname": "default_result_limit",
+   "fieldtype": "Int",
+   "label": "Default Result Limit",
+   "reqd": 1
+  },
+  {
+   "default": "100",
+   "description": "Hard application ceiling is 100.",
+   "fieldname": "maximum_result_limit",
+   "fieldtype": "Int",
+   "label": "Maximum Result Limit",
+   "reqd": 1
+  },
+  {
+   "fieldname": "allowlist_section",
+   "fieldtype": "Section Break",
+   "label": "Schema DocType Allowlist"
+  },
+  {
+   "description": "Only metadata for these DocTypes is indexed. ERPNext record values are never embedded.",
+   "fieldname": "allowed_doctypes",
+   "fieldtype": "Table",
+   "label": "Allowed DocTypes",
+   "options": "AI Assistant Allowed DocType"
+  },
+  {
+   "fieldname": "sync_status_section",
+   "fieldtype": "Section Break",
+   "label": "Last Schema Synchronization"
+  },
+  {
+   "default": "Never",
+   "fieldname": "last_sync_status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Never\nQueued\nRunning\nSuccess\nDrift\nError",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_sync_started_at",
+   "fieldtype": "Datetime",
+   "label": "Started At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_sync_completed_at",
+   "fieldtype": "Datetime",
+   "label": "Completed At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_sync_catalog_hash",
+   "fieldtype": "Data",
+   "label": "Catalog Hash",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_sync_doctype_count",
+   "fieldtype": "Int",
+   "label": "DocTypes",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_sync_chunk_count",
+   "fieldtype": "Int",
+   "label": "Chunks",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_sync_changed_count",
+   "fieldtype": "Int",
+   "label": "Changed Chunks",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_sync_deleted_count",
+   "fieldtype": "Int",
+   "label": "Deleted Chunks",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_sync_error",
+   "fieldtype": "Long Text",
+   "label": "Last Error",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "defaults_seeded",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Defaults Seeded",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "issingle": 1,
+ "links": [],
+ "module": "Hksr",
+ "name": "AI Assistant Settings",
+ "permissions": [
+  {
+   "create": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  }
+ ],
+ "track_changes": 1
+}
