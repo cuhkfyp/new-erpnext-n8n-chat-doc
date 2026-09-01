@@ -1,0 +1,37 @@
+# Change log
+
+## 2026-09-01
+
+- Confirmed the legacy outage was caused by reverse-proxy routing to Frappe
+  instead of n8n.
+- Rejected restoration of the insecure forgeable-user/raw-SQL workflow.
+- Added configurable AI Assistant Settings and Schema DocType Allowlist.
+- Added authenticated bootstrap, schema catalog, permissioned QueryPlanV1
+  execution, and sync-result APIs.
+- Added non-blocking post-migration sync and nightly repair scheduling.
+- Added schema-only Supabase RAG with deterministic hashes and 768-dimensional
+  Gemini embeddings.
+- Added secure chat, permissioned-query, and incremental schema-sync n8n
+  workflows.
+- Added opaque session-bound authentication and Redis chat memory.
+- Added deterministic pre-model gates for raw SQL, writes, secrets, and prompt
+  injection.
+- Corrected natural-language allowlisted dataset resolution without allowing
+  denied system-table substitution.
+- Added exact reverse-proxy route management with backup, configuration test,
+  graceful reload, and routing verification.
+- Pinned n8n to the tested version and preserved mounted SQLite, credential,
+  patch, and Redis data.
+- Added the isolated browser acceptance Page.
+- Fixed initial and stacked-message clipping, composer overlap, streaming-height
+  races, and final-message tail clearance.
+- Diagnosed unrelated bulk-delete notifications as shared-user Frappe realtime
+  messages, not v2 workflow writes.
+- Tested four newly managed Gemini generative credentials without exporting
+  their values; manually switched both generation nodes to one working
+  credential and left the embedding credential unchanged.
+- Republished and restarted n8n through the persistent procedure; verified both
+  v2 workflows active and structurally unchanged apart from the intended
+  credential reference.
+- Updated the tracked and persistent implementation, n8n operations, and UAT
+  documentation.

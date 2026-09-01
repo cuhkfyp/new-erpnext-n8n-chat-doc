@@ -1,0 +1,103 @@
+# Operations and credential handling
+
+## Environment separation
+
+Development, UAT, and production must use separate:
+
+- Frappe sites and integration credentials;
+- Supabase projects and service credentials;
+- Gemini generative credentials;
+- Gemini embedding credentials;
+- webhook IDs and vector namespaces; and
+- internal URLs and proxy targets.
+
+Workflow templates should contain placeholders. Rendered environment workflows
+must remain outside a public documentation repository.
+
+## Credential roles
+
+| Credential | Purpose |
+| --- | --- |
+| Frappe integration secret | Authenticates n8n schema-sync/status calls to Frappe. It is not a Gemini key or encryption key. |
+| Gemini generative | Used only by chat generation and QueryPlan generation. |
+| Gemini embedding | Used only for 768-dimensional schema indexing and retrieval. |
+| Supabase service | Accesses only that environment's isolated schema-vector project. |
+| Redis | Stores bounded chat memory keyed by the opaque non-PII session ID. |
+| n8n encryption key | Encrypts n8n-managed credentials at rest and must remain stable across restarts. |
+
+Never place these values in workflow JSON, documentation, shell history, source
+files, or screenshots.
+
+## Manual Gemini credential switch
+
+Automatic key cycling is intentionally prohibited. If a generative credential
+is quota-limited:
+
+1. Create separate managed credentials in n8n without pasting values into a
+   workflow export.
+2. Test each candidate through a temporary inactive diagnostic workflow using a
+   minimal request and record only the credential name and response status.
+3. Select one working credential explicitly.
+4. Change only the chat-generation and QueryPlan-generation nodes.
+5. Leave the embedding node on its dedicated embedding credential.
+6. Export current and published definitions before and after the change.
+7. Confirm node count, connections, security gates, credential roles, and
+   normalized workflow structure are unchanged.
+8. Publish each current workflow and restart through the persistent n8n
+   stop/start procedure.
+9. Confirm activation in startup logs and keep the diagnostic workflow inactive.
+
+n8n's CLI import can deactivate an updated workflow. Publishing the current
+version and restarting the running process are required before considering the
+switch complete.
+
+## Schema synchronization
+
+The sync sequence is:
+
+1. Authenticate the caller.
+2. Fetch a complete schema-only catalog.
+3. Compare deterministic hashes with the current environment namespace.
+4. Embed only new or changed chunks at 768 dimensions.
+5. Require a complete embedding batch.
+6. Upsert the complete changed batch atomically.
+7. Delete stale chunks only after all previous stages succeed.
+8. Record bounded status and drift telemetry in Frappe.
+
+On any partial failure, preserve the last good index and report the failure.
+
+## Restart and persistence
+
+Use the maintained restart script for the deployed environment. It performs
+container stop/start and retains:
+
+- the n8n SQLite database;
+- n8n-managed credentials and encryption state;
+- workflow definitions and history;
+- Redis data on its configured volume;
+- mounted proxy/error patches; and
+- the pinned n8n image.
+
+Do not edit n8n SQLite directly. Do not rely on unmounted container-layer edits;
+they are lost on recreation.
+
+## Cutover
+
+After the two-user acceptance matrix passes:
+
+1. Capture current workflow and proxy backups with checksums.
+2. Confirm all three v2 workflows are published and healthy.
+3. Apply the exact tested Apache route.
+4. Install the secure window-mode loader for the normal lower-right Desk widget.
+5. Switch Frappe bootstrap to the v2 webhook atomically.
+6. Monitor Apache, Frappe, n8n, Redis, VPN/proxy, and schema-sync status.
+7. Rotate exposed legacy credentials after acceptance.
+8. Deactivate, but do not delete, the legacy workflows for 14 days.
+
+Do not reactivate the insecure raw-SQL path during rollout or rollback.
+
+## Rollback
+
+Rollback disables v2, restores the saved bootstrap/proxy configuration, and
+keeps the secure v2 workflows available for diagnosis. It never restores the
+legacy shared-account raw-SQL execution path.

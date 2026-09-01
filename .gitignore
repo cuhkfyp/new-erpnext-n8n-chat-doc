@@ -1,0 +1,16 @@
+# Never commit environment-specific or secret-bearing artifacts.
+*.env
+*.env.*
+!.env.example
+*credentials*
+*secret*
+*token*
+*workflow-export*
+*workflows.rendered.json
+baseline/
+runtime/
+private_security/
+*.sqlite
+*.sqlite-*
+*.db
+*.log
