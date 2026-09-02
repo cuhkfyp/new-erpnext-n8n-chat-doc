@@ -17,6 +17,10 @@ public.
 - [Acceptance and security tests](docs/ACCEPTANCE_TESTS.md)
 - [Supabase 768-dimensional schema notes](docs/SUPABASE_SCHEMA.md)
 - [Change log](docs/CHANGELOG.md)
+- [Complete project-file audit](MANIFEST.md)
+- [Sanitized full implementation runbook](docs/full/IMPLEMENTATION_AND_OPERATIONS.md)
+- [Sanitized full n8n guide appendix](docs/full/N8N_GUIDE_V2_APPENDIX.md)
+- [Sanitized full UAT appendix](docs/full/UAT_V2_APPENDIX.md)
 - [Public-safe source bundle](source/README.md)
 
 ## Current state at backup time

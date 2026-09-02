@@ -4,7 +4,8 @@ This directory is a sanitized backup of the implemented ERPNext AI Assistant
 v2 source. Production credential values were never part of this copy.
 Environment-specific hostnames, webhook examples, namespaces, paths, and
 container defaults were replaced with examples or required environment
-variables before publication.
+variables before publication. Internal default DocType names and live workflow
+and version UUIDs were also replaced with explicit examples.
 
 ## Contents
 
@@ -17,6 +18,10 @@ variables before publication.
 - `n8n/render_workflows.sh` — environment renderer for template placeholders.
 - `n8n/docker-compose.v2.yml` — pinned n8n/Redis example using environment-
   supplied persistent paths and host configuration.
+- `n8n/production.env.example` — sanitized non-secret production runtime
+  example.
+- `n8n/workflows.rendered.example.json` — inactive rendered example with
+  example webhook/workflow IDs and `CONFIGURE_*` credential placeholders.
 - `supabase/` — pgvector schema/RPC migrations and vector-schema detection.
 - `apache/` — idempotent exact-route apply/verify/rollback helper using example
   host defaults.
@@ -30,8 +35,8 @@ variables before publication.
 
 ## Intentionally excluded
 
-- `production.env`;
-- `workflows.rendered.json`;
+- raw `production.env` (a sanitized `.example` is included);
+- raw `workflows.rendered.json` (a sanitized `.example.json` is included);
 - n8n workflow exports and execution data;
 - credential exports, IDs, fingerprints, or encrypted inventories;
 - production webhook IDs, hostnames, Supabase project URLs, and backup paths;

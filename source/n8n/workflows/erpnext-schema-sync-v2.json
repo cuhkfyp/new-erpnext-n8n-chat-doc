@@ -1,6 +1,6 @@
 [
   {
-    "id": "7e34e488-a25f-49f8-b0b4-7a3a235dd35d",
+    "id": "33333333-3333-4333-8333-333333333333",
     "name": "ERPNext Schema Sync v2",
     "active": false,
     "nodes": [
@@ -469,7 +469,7 @@
       "saveExecutionProgress": false,
       "saveManualExecutions": false
     },
-    "versionId": "182a091d-b21f-4c72-a482-c15602cc8ef8",
+    "versionId": "33333333-3333-4333-8333-333333333334",
     "meta": { "templateCredsSetupCompleted": false },
     "tags": []
   }

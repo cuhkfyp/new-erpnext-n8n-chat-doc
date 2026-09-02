@@ -11,7 +11,7 @@ from frappe.utils import now_datetime
 from hksr.ai_assistant.auth import INTEGRATION_HEADER
 from hksr.ai_assistant.schema import get_site_id
 
-DEFAULT_ALLOWLIST = ("CCD Master", "CCD Registration", "CCD-REG-PHI-vDBUAT")
+DEFAULT_ALLOWLIST = ("Example Master", "Example Registration", "Example Reporting View")
 SYNC_TIMEOUT_SECONDS = 15
 
 
