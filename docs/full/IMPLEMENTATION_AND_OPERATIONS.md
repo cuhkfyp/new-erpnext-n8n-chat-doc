@@ -370,8 +370,9 @@ workflow metadata.
   storage as configured.
 - Compose recreation uses pinned n8n 2.21.7 and the persistent n8n data bind.
 - ERPNext restart preserves Settings/DocTypes.
-- Host reboot preserves n8n volume, route, Frappe schema, Redis behavior, and
-  VPN topology.
+- Deferred resilience test: a maintenance-window host reboot must eventually
+  prove that n8n volume, route, Frappe schema, Redis behavior, and VPN topology
+  recover. This is not a browser-acceptance or widget-cutover prerequisite.
 - Confirm n8n still uses `surfshark-vpn:8888`; do not reconfigure or stop the
   independent `surfshark-wireguard` project.
 
@@ -956,7 +957,7 @@ The later production canary passed: the administrator's Traditional Chinese
 `今年` grouped aggregate used 2026 and completed, while the direct English
 current-year answer returned 2026. Combined with the earlier restricted-user
 permission/safety results, the nominated two-user browser gate is complete.
-Operational/resilience testing and widget cutover remain separate.
+The host-reboot resilience test remains separate and deferred.
 
 ### Operational-resilience result
 
@@ -975,9 +976,11 @@ were unchanged, and no raw export is published here.
 
 The tracked `n8n/apply_redis_host_tuning.sh` helper persistently applies
 `vm.overcommit_memory = 1`. A final recreation loaded all five keys without the
-former warning. Container-recreation persistence is accepted. Host reboot and
-deliberate provider-failure injection remain explicit-impact decisions for a
-maintenance window before atomic widget cutover.
+former warning. Container-recreation persistence is accepted. On 2026-09-02
+the operator postponed the host reboot; it remains a separate
+maintenance-window resilience test and does not block atomic widget cutover.
+Deliberate provider-failure injection also remains a separate explicit-impact
+decision.
 
 The operations-source installer excludes runtime workflow stages, temporary
 runtime-stage directories, and RDB files. Previously installed runtime
@@ -996,4 +999,21 @@ The initial production capture passed every live application and storage check
 but reported `REBOOT NOT READY`: nine long-lived Frappe containers use
 `on-failure`, which does not restart them after a Docker daemon restart, and no
 enabled Frappe boot service was detected. The persistent Frappe Compose policy
-must be corrected and recaptured before scheduling host-reboot acceptance.
+and existing post-boot recovery steps must be corrected and recaptured before
+scheduling host-reboot acceptance. This deferred work is not a widget-cutover
+blocker.
+
+### Atomic lower-right widget cutover
+
+On 2026-09-02 a restricted workflow/vhost baseline was captured, all three v2
+workflows and the exact route were verified, and a fresh four-DocType,
+thirteen-chunk repair completed successfully. The deployment helper now backs
+up the existing widget and checksum-verifies the secure loader in both the Hksr
+app source and the separate frontend-served asset filesystem.
+
+The normal lower-right Desk widget was switched to the secure Frappe-bootstrap
+loader without rebooting or recreating containers. The tracked, app-source,
+and publicly served widget checksums matched. Apache routing, guest rejection,
+forged-request safe failure, n8n/Redis health, and required container health
+passed. A logged-in normal-Desk hard-refresh greeting/data smoke remains before
+the old workflows are deactivated but retained for fourteen days.

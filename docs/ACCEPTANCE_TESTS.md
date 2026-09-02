@@ -99,8 +99,9 @@ Production result on 2026-09-02: the five existing Redis keys survived repeated
 Compose-managed recreation from the named AOF-backed volume, n8n stayed HTTP
 200, all v2 workflows remained active, and normalized workflow definitions and
 credential roles were unchanged. The Redis host prerequisite was persisted and
-a final recreation loaded without the earlier overcommit warning. Host reboot
-remains pending an explicit maintenance window.
+a final recreation loaded without the earlier overcommit warning. The operator
+postponed host-reboot recovery testing on 2026-09-02. It remains pending an
+explicit maintenance window and is not a blocker for atomic widget cutover.
 
 The read-only precheck is now implemented. Its first production capture passed
 all live application/storage checks but correctly refused reboot readiness

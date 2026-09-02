@@ -148,10 +148,13 @@ current workflows match their published versions and activated after
 stop/start; n8n health and Redis returned HTTP 200 and `PONG`. Audit exports
 and checksums are recorded in `ai-assistant-v2/IMPLEMENTATION_AND_OPERATIONS.md`.
 
-The acceptance Page is temporary. After the nominated higher-permission and
-restricted-user tests pass, `deploy_shadow_backend.sh cutover-widget` installs
-the tracked secure `mode: "window"` loader for the normal lower-right Desk
-widget. This is a v2 cutover, not a return to the legacy raw-SQL workflow.
+The nominated higher-permission and restricted-user tests passed. On
+2026-09-02, `deploy_shadow_backend.sh cutover-widget` installed and
+checksum-verified the tracked secure `mode: "window"` loader in both the Hksr
+app source and the frontend-served asset filesystem. The normal lower-right
+Desk widget now uses v2; this is not a return to the legacy raw-SQL workflow.
+Retain the acceptance Page only for diagnosis until post-cutover browser smoke
+passes.
 
 Frappe's standard `frappe.desk.reportview.delete_bulk` publishes a successful
 bulk-delete message over realtime to the username that initiated the job. If

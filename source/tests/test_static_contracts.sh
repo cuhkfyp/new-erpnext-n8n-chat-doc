@@ -86,6 +86,8 @@ jq -e '
 
 rg -q 'HARD_MAX_LIMIT = 100' "${ROOT_DIR}/hksr_overlay/hksr/ai_assistant/query_plan.py"
 rg -q 'BLOCKED_FIELDTYPES' "${ROOT_DIR}/hksr_overlay/hksr/ai_assistant/query_plan.py"
+rg -q 'FRONTEND_WIDGET_ASSET=' "${ROOT_DIR}/deploy_shadow_backend.sh"
+rg -q 'frontend_widget_hash=' "${ROOT_DIR}/deploy_shadow_backend.sh"
 jq -e '.doctype == "Page" and .name == "ai-assistant-v2-uat" and .module == "Hksr" and (.roles | length == 0)' \
   "${ROOT_DIR}/hksr_overlay/hksr/hksr/page/ai_assistant_v2_uat/ai_assistant_v2_uat.json" >/dev/null
 rg -q 'hksr\.ai_assistant\.api\.bootstrap' \

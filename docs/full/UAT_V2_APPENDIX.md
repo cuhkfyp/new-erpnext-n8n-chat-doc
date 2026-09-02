@@ -125,11 +125,12 @@ authoritative-date correction. Diagnose any later failure with an explicit
 managed-credential change; do not implement automatic key cycling. The
 embedding credential was not changed.
 
-This full-page launcher is temporary. After the nominated two-user matrix
-passes, the atomic production cutover installs the same secure bootstrap and
-opaque-token contract through the tracked `mode: "window"` loader, restoring
-the normal lower-right Desk presentation. Do not point that widget back to the
-legacy raw-SQL workflow.
+This full-page launcher is temporary. The nominated two-user matrix passed and
+the 2026-09-02 atomic production cutover installed the same secure bootstrap
+and opaque-token contract through the tracked `mode: "window"` loader,
+restoring the normal lower-right Desk presentation. Retain this Page only for
+diagnosis until post-cutover browser smoke passes. Do not point the widget back
+to the legacy raw-SQL workflow.
 
 ### Relative-date UAT regression
 
@@ -160,14 +161,16 @@ with unchanged normalized definitions and credential roles. The Redis host
 prerequisite is persistently set to `vm.overcommit_memory = 1`, and the final
 recreation loaded without its earlier warning.
 
-Container-recreation persistence is accepted. A host reboot and deliberate
-production provider-failure injection remain separate explicit-impact tests;
-they require a maintenance decision and are not implied by browser UAT.
+Container-recreation persistence is accepted. The operator postponed the host
+reboot on 2026-09-02; it remains a separate maintenance-window resilience test
+and does not block atomic widget cutover. Deliberate production
+provider-failure injection is also a separate explicit-impact test.
 
 ### Host-reboot precheck
 
 The tracked read-only reboot checker passed the current application, storage,
 workflow, proxy, and configuration checks but reported `REBOOT NOT READY`.
 Nine long-lived Frappe containers use Docker's `on-failure` policy, and no
-enabled Frappe boot service was found. Correct and apply the persistent Frappe
-Compose policy, then recapture with zero failures before reboot UAT.
+enabled Frappe boot service was found. Correct the persistent Frappe Compose
+policy and required post-boot recovery steps, then recapture with zero failures
+before future reboot UAT. This deferred work is not a widget-cutover blocker.

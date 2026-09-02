@@ -182,8 +182,8 @@ migrated from an anonymous volume to a tracked named AOF-backed volume, all five
 keys survived repeated recreation, n8n remained healthy, and normalized v2
 workflow definitions and credential roles did not change. The host now
 persistently applies `vm.overcommit_memory = 1` through an idempotent tracked
-helper. Remaining explicit-impact work is the host-reboot/provider-failure
-decision followed by an approved atomic widget cutover.
+helper. The host-reboot/provider-failure tests are deferred maintenance-window
+work and are not cutover blockers.
 
 A tracked read-only `capture`/`verify` script now preserves the pre-reboot
 baseline and compares the recovered host without exporting workflow or
@@ -192,3 +192,18 @@ long-lived Frappe containers use Docker's `on-failure` policy, which does not
 restart them when the daemon restarts, and no enabled Frappe boot service was
 present. All current health checks passed, but reboot readiness remains false
 until the persistent Frappe Compose policy is corrected and recaptured.
+
+## Atomic widget cutover
+
+On 2026-09-02 the secure loader was installed for the normal lower-right Desk
+widget. Preflight captured restricted workflow/vhost backups, confirmed all
+three v2 workflows active, verified the exact route, and completed a fresh
+four-DocType, thirteen-chunk schema repair.
+
+The deployment helper was updated to back up and checksum-verify both the Hksr
+app source and this Docker layout's separate frontend-served asset. The public
+asset matched the tracked source and retained Frappe bootstrap, opaque
+token/session metadata, window mode, and disabled unauthenticated history
+loading. Post-change Apache, guest/forged rejection, n8n, Redis, VPN, and Frappe
+health checks passed. A logged-in normal-Desk hard-refresh smoke remains before
+the old workflows are deactivated but retained for fourteen days.

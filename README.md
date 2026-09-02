@@ -1,7 +1,7 @@
 # new-erpnext-n8n-chat-doc
 
 Public-safe documentation backup for the secured ERPNext AI Assistant v2
-implementation completed and verified on 2026-09-01.
+implementation completed and cut over on 2026-09-02.
 
 This repository documents the design, implementation changes, operating
 procedures, acceptance tests, and rollback controls. It also contains the
@@ -33,19 +33,22 @@ public.
   generated SQL, joins, writes, and arbitrary expressions are rejected.
 - The vector index contains schema metadata only and uses 768-dimensional
   Gemini embeddings. ERPNext record values are never embedded.
-- The isolated acceptance Page is active for browser testing. The legacy Desk
-  widget has not yet been replaced.
+- The normal lower-right Desk widget now uses the secure v2 Frappe-bootstrap
+  loader. The isolated acceptance Page is temporarily retained for diagnosis.
 - The nominated higher-permission and restricted-user browser matrix has
   passed, including the corrected bilingual relative-date behavior.
 - The normal schema-repair path and container-recreation persistence gate have
   passed. Redis now uses a tracked named volume with AOF and the documented
   host-memory prerequisite.
-- Host reboot and deliberate provider-failure injection remain explicit-impact
-  tests that require a maintenance decision before widget cutover.
+- Host reboot and deliberate provider-failure injection remain deferred
+  explicit-impact maintenance tests; they are not widget-cutover blockers.
 - The read-only reboot precheck is prepared, but currently reports nine
   pre-existing Frappe restart-policy blockers. The host must not be rebooted
   for acceptance until the persistent Frappe Compose policy is corrected and
   the checkpoint reports zero failures.
+- Server-side cutover checks passed. A normal logged-in Desk hard-refresh
+  greeting/data smoke remains before the legacy workflows are deactivated and
+  retained for fourteen days.
 - A separately managed Gemini generative credential was manually selected
   after a point-in-time health test. Automatic key cycling remains disabled.
 - Frappe now supplies an authoritative current date/year and exact date ranges

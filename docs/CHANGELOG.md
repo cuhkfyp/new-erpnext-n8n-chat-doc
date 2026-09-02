@@ -2,6 +2,20 @@
 
 ## 2026-09-02
 
+- Explicitly postponed host-reboot recovery testing to a future maintenance
+  window and recorded that it is not a browser-acceptance or widget-cutover
+  blocker.
+- Captured restricted pre-cutover workflow and SSL-vhost backups and completed
+  a fresh successful four-DocType, thirteen-chunk schema repair.
+- Strengthened widget deployment to preserve and checksum-verify the Hksr app
+  source and separate frontend-served asset.
+- Switched the normal lower-right Desk widget to the secure v2 Frappe-bootstrap
+  loader without rebooting, recreating, or restarting containers.
+- Verified the publicly served loader, exact Apache route, guest rejection,
+  forged-request safe failure, n8n/Redis health, VPN health, and required Frappe
+  container health. Normal logged-in Desk smoke remains before legacy workflow
+  deactivation.
+
 - Verified the automatic nightly schema repair and a manual repair run against
   the same four-DocType, thirteen-chunk catalog with zero drift.
 - Replaced the implicit anonymous Redis volume with a tracked Compose-named

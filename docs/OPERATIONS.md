@@ -108,7 +108,11 @@ expected key count, AOF load/write health, n8n HTTP health, and all three v2
 workflow activations after recreation. Never commit the RDB or raw workflow
 exports.
 
-## Host-reboot checkpoint
+## Deferred host-reboot checkpoint
+
+The host-reboot test was explicitly postponed on 2026-09-02. It verifies
+recovery after a real power outage or Ubuntu restart; it is not required for
+normal assistant operation, browser acceptance, or atomic widget cutover.
 
 Run `source/operations/reboot_persistence_check.sh capture` before approving a
 host reboot. The script writes a private baseline of checksums and non-secret
@@ -124,11 +128,19 @@ The production precheck on 2026-09-02 found nine long-lived Frappe containers
 using `on-failure` and no enabled Frappe boot service. Docker explicitly states
 that `on-failure` does not restart a container when the daemon restarts.
 [Docker restart-policy documentation](https://docs.docker.com/engine/containers/start-containers-automatically/)
-Therefore the host is not reboot-ready: persist a reboot-capable policy in the
-Frappe Compose source, apply it without changing volumes or one-shot setup
-services, and recapture until the script reports zero failures.
+Therefore the host is not reboot-ready. Before a future maintenance-window
+reboot test, persist a reboot-capable policy in the Frappe Compose source, add
+the required idempotent post-boot recovery for existing nginx/SSHFS/host-map
+and proxy steps, apply it without changing volumes or one-shot setup services,
+and recapture until the script reports zero failures. This deferred work does
+not block the v2 widget cutover.
 
 ## Cutover
+
+Current checkpoint (2026-09-02): steps 1-6 are complete. The secure loader is
+served by the normal lower-right Desk widget and server-side post-change health
+checks passed. Complete step 7 from a normal logged-in Desk page before
+deactivating the legacy workflows.
 
 After the two-user acceptance matrix passes:
 
