@@ -96,6 +96,18 @@ container stop/start and retains:
 Do not edit n8n SQLite directly. Do not rely on unmounted container-layer edits;
 they are lost on recreation.
 
+Redis chat memory must use the Compose-named `n8n_redis_data` volume mounted at
+`/data`, with AOF enabled and `appendfsync everysec`. Run
+`source/n8n/apply_redis_host_tuning.sh status` to check the host. Its root-only
+`apply` action atomically persists and applies `vm.overcommit_memory = 1`; the
+helper does not restart either container.
+
+When migrating existing Redis data, retain a restricted RDB and the former
+volume until the named volume passes an independent recreation. Verify the
+expected key count, AOF load/write health, n8n HTTP health, and all three v2
+workflow activations after recreation. Never commit the RDB or raw workflow
+exports.
+
 ## Cutover
 
 After the two-user acceptance matrix passes:

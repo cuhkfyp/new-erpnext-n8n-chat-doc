@@ -149,3 +149,17 @@ Chinese grouped `今年` query used 2026 and completed; the direct English
 current-year answer was also 2026. Together with the earlier restricted-user
 permission and safety matrix, the nominated two-user browser acceptance passed.
 The operational/resilience checklist remains separate from this browser gate.
+
+### Operational-resilience result
+
+The automatic and manual schema repair paths completed against the same
+four-DocType, thirteen-chunk catalog with zero drift. Redis was migrated to the
+tracked named AOF-backed volume, all five existing keys survived repeated
+service recreation, n8n remained healthy, and all v2 workflows remained active
+with unchanged normalized definitions and credential roles. The Redis host
+prerequisite is persistently set to `vm.overcommit_memory = 1`, and the final
+recreation loaded without its earlier warning.
+
+Container-recreation persistence is accepted. A host reboot and deliberate
+production provider-failure injection remain separate explicit-impact tests;
+they require a maintenance decision and are not implied by browser UAT.

@@ -14,12 +14,17 @@ volumes:
       type: none
       o: bind
       device: ${N8N_DATA_DIR:?Set N8N_DATA_DIR to an absolute persistent path}
+  n8n_redis_data:
+    driver: local
 
 services:
   n8n-redis:
     image: redis:7-alpine
     container_name: n8n-redis
     restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec"]
+    volumes:
+      - n8n_redis_data:/data
     networks:
       - frappe_network
     healthcheck:

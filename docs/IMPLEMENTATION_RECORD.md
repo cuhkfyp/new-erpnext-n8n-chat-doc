@@ -176,6 +176,11 @@ managed credential reference on the two generative nodes.
   the validated authoritative-date contract.
 
 The nominated higher-permission and restricted-user browser matrix is complete,
-including the corrected bilingual relative-date behavior. Remaining rollout
-work is the separate operational/resilience checklist followed by an approved
-atomic widget cutover.
+including the corrected bilingual relative-date behavior. The normal schema
+repair and container-recreation persistence gates are also complete: Redis was
+migrated from an anonymous volume to a tracked named AOF-backed volume, all five
+keys survived repeated recreation, n8n remained healthy, and normalized v2
+workflow definitions and credential roles did not change. The host now
+persistently applies `vm.overcommit_memory = 1` through an idempotent tracked
+helper. Remaining explicit-impact work is the host-reboot/provider-failure
+decision followed by an approved atomic widget cutover.

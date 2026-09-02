@@ -36,8 +36,12 @@ public.
 - The isolated acceptance Page is active for browser testing. The legacy Desk
   widget has not yet been replaced.
 - The nominated higher-permission and restricted-user browser matrix has
-  passed, including the corrected bilingual relative-date behavior. Broader
-  operational/resilience checks still precede widget cutover.
+  passed, including the corrected bilingual relative-date behavior.
+- The normal schema-repair path and container-recreation persistence gate have
+  passed. Redis now uses a tracked named volume with AOF and the documented
+  host-memory prerequisite.
+- Host reboot and deliberate provider-failure injection remain explicit-impact
+  tests that require a maintenance decision before widget cutover.
 - A separately managed Gemini generative credential was manually selected
   after a point-in-time health test. Automatic key cycling remains disabled.
 - Frappe now supplies an authoritative current date/year and exact date ranges

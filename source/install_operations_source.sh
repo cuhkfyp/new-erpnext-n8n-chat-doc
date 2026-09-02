@@ -68,7 +68,9 @@ cp -a "${VOLUME_ROOT}/DEPLOY_UAT.md" "${BACKUP_DIR}/DEPLOY_UAT.md.before"
 cp -a "${VOLUME_ROOT}/Deploy_UAT.sh" "${BACKUP_DIR}/Deploy_UAT.sh.before"
 
 install -d "${DESTINATION}"
-rsync -a --exclude='workflows.rendered.json' --exclude='__pycache__' --exclude='*.pyc' \
+rsync -a --exclude='.runtime-workflow-stage/' --exclude='.runtime-stage.*/' \
+  --exclude='workflows.rendered.json' --exclude='*.rdb' \
+  --exclude='__pycache__' --exclude='*.pyc' \
   "${SCRIPT_DIR}/" "${DESTINATION}/"
 
 install -m 0644 "${SCRIPT_DIR}/n8n/docker-compose.v2.yml" "${N8N_ROOT}/docker-compose.yml"

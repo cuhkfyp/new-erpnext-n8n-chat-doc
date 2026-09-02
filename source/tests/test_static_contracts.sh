@@ -169,6 +169,14 @@ rg -q 'embedding public.vector\(768\)' "${ROOT_DIR}/supabase/001_erpnext_schema_
 rg -q 'OPERATOR\(public\.<=>\)' "${ROOT_DIR}/supabase/001_erpnext_schema_rag_v2.public-vector.sql"
 rg -q "where extension.extname = 'vector'" "${ROOT_DIR}/supabase/detect_vector_schema.sql"
 rg -q 'docker.n8n.io/n8nio/n8n:2.21.7' "${ROOT_DIR}/n8n/docker-compose.v2.yml"
+rg -q '^  n8n_redis_data:$' "${ROOT_DIR}/n8n/docker-compose.v2.yml"
+rg -q 'n8n_redis_data:/data' "${ROOT_DIR}/n8n/docker-compose.v2.yml"
+rg -q -- '--appendonly.*yes' "${ROOT_DIR}/n8n/docker-compose.v2.yml"
+bash -n "${ROOT_DIR}/n8n/apply_redis_host_tuning.sh"
+rg -q 'vm\.overcommit_memory' "${ROOT_DIR}/n8n/apply_redis_host_tuning.sh"
+rg -q '/etc/sysctl\.d/90-n8n-redis\.conf' "${ROOT_DIR}/n8n/apply_redis_host_tuning.sh"
+rg -Fq -- "--exclude='.runtime-workflow-stage/'" "${ROOT_DIR}/install_operations_source.sh"
+rg -Fq -- "--exclude='*.rdb'" "${ROOT_DIR}/install_operations_source.sh"
 rg -q 'frappe_docker-queue-short-1 frappe_docker-queue-long-1 frappe_docker-scheduler-1' \
   "${ROOT_DIR}/deploy_shadow_backend.sh"
 rg -Fq 'mktemp -d "${SCRIPT_DIR}/.runtime-stage.XXXXXX"' \

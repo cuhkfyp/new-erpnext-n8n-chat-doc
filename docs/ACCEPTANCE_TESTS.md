@@ -32,8 +32,10 @@ results. The administrator subsequently passed the grouped Traditional Chinese
 `今年` aggregate using 2026 data, and the direct English current-year answer was
 2026 after Frappe date grounding was deployed. The nominated higher-permission
 and restricted-user browser acceptance matrix is therefore complete. Broader
-schema-sync failure, persistence/recreation, environment-isolation, and
-cutover monitoring checks remain separate rollout gates.
+operational checks subsequently confirmed the normal schema-repair path and
+named-volume/AOF Redis recreation persistence. Host reboot, deliberate live
+provider-failure injection, and cutover monitoring remain separate rollout
+decisions because they intentionally affect shared infrastructure.
 
 ## Functional tests
 
@@ -92,6 +94,13 @@ query.
 
 Workflow, credential, SQLite, Redis, routing, and schema-index state must retain
 their documented persistence characteristics.
+
+Production result on 2026-09-02: the five existing Redis keys survived repeated
+Compose-managed recreation from the named AOF-backed volume, n8n stayed HTTP
+200, all v2 workflows remained active, and normalized workflow definitions and
+credential roles were unchanged. The Redis host prerequisite was persisted and
+a final recreation loaded without the earlier overcommit warning. Host reboot
+remains pending an explicit maintenance window.
 
 ## UI regression tests
 

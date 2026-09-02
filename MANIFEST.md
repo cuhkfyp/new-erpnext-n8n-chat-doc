@@ -2,7 +2,7 @@
 
 Audit date: 2026-09-02
 
-The source project contained 39 non-generated files and 13 generated Python
+The source project contained 40 non-generated files and 13 generated Python
 bytecode files. Every non-generated file has a representation in this public
 backup. Files marked **sanitized** preserve their implementation or document
 content while replacing environment-specific operational metadata.
@@ -36,6 +36,7 @@ content while replacing environment-specific operational metadata.
 | `hksr_overlay/hksr/public/js/n8n_chat.js` | `source/hksr_overlay/hksr/public/js/n8n_chat.js` | Included |
 | `install_operations_source.sh` | `source/install_operations_source.sh` | Sanitized paths |
 | `n8n/N8N_GUIDE_V2_APPENDIX.md` | `docs/full/N8N_GUIDE_V2_APPENDIX.md` | Sanitized full copy |
+| `n8n/apply_redis_host_tuning.sh` | `source/n8n/apply_redis_host_tuning.sh` | Included |
 | `n8n/docker-compose.v2.yml` | `source/n8n/docker-compose.v2.yml` | Sanitized hosts, networks, and paths |
 | `n8n/production.env` | `source/n8n/production.env.example` | Sanitized project/host example |
 | `n8n/render_workflows.sh` | `source/n8n/render_workflows.sh` | Included |

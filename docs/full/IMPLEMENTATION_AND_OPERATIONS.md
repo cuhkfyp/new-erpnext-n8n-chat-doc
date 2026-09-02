@@ -957,3 +957,28 @@ The later production canary passed: the administrator's Traditional Chinese
 current-year answer returned 2026. Combined with the earlier restricted-user
 permission/safety results, the nominated two-user browser gate is complete.
 Operational/resilience testing and widget cutover remain separate.
+
+### Operational-resilience result
+
+The automatic nightly schema repair and a manual repair run completed against
+the same four-DocType, thirteen-chunk schema-only catalog with zero drift. No
+allowlisted schema or live provider credential was deliberately damaged for
+this test.
+
+Redis was migrated from an anonymous volume to the tracked Compose-named
+`n8n_redis_data` volume with AOF and `appendfsync everysec`. A restricted RDB
+was retained for rollback and was not copied to this public backup. All five
+existing keys survived repeated Redis-only Compose recreation while n8n stayed
+HTTP 200 and the three v2 workflows stayed active. Pre/post workflow content
+was identical after removing n8n's volatile export counter, credential roles
+were unchanged, and no raw export is published here.
+
+The tracked `n8n/apply_redis_host_tuning.sh` helper persistently applies
+`vm.overcommit_memory = 1`. A final recreation loaded all five keys without the
+former warning. Container-recreation persistence is accepted. Host reboot and
+deliberate provider-failure injection remain explicit-impact decisions for a
+maintenance window before atomic widget cutover.
+
+The operations-source installer excludes runtime workflow stages, temporary
+runtime-stage directories, and RDB files. Previously installed runtime
+artifacts were moved to a private recoverable backup and are not published.

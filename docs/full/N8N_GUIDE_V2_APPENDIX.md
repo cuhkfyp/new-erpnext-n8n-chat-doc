@@ -177,3 +177,21 @@ n8n restart, and verify activation plus matching current/published versions.
 Keep full workflow exports restricted because legacy definitions can contain
 plaintext historical credentials; only sanitized templates belong in the
 public source backup.
+
+### Redis recreation persistence
+
+Use the Compose-named `n8n_redis_data` volume at `/data`, enable AOF with
+`appendfsync everysec`, and check the host with
+`n8n/apply_redis_host_tuning.sh status`. Its root-only `apply` action
+persistently sets `vm.overcommit_memory = 1` and does not restart containers.
+
+For an existing deployment, save and retain a restricted recovery RDB before
+migration. Do not allow an empty Redis instance to create the first AOF before
+the old keys are seeded and verified. Retain the former volume until the named
+volume passes independent recreation. Verify expected key count, healthy AOF
+load/write status, n8n HTTP health, and all v2 workflow activations. Raw Redis
+data and workflow exports never belong in the public repository.
+
+The 2026-09-02 production run preserved all five existing keys through repeated
+named-volume recreation and a final post-tuning recreation; normalized v2
+workflow content and credential roles remained unchanged.

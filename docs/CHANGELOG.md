@@ -2,6 +2,22 @@
 
 ## 2026-09-02
 
+- Verified the automatic nightly schema repair and a manual repair run against
+  the same four-DocType, thirteen-chunk catalog with zero drift.
+- Replaced the implicit anonymous Redis volume with a tracked Compose-named
+  volume and enabled AOF with `appendfsync everysec`.
+- Preserved and restored all five existing Redis keys, then passed repeated
+  Redis-only Compose recreation while n8n remained healthy and all v2
+  workflows stayed active.
+- Added an idempotent Redis host-tuning helper and persistently applied
+  `vm.overcommit_memory = 1`; the final recreation loaded without the previous
+  warning.
+- Verified normalized pre/post workflow definitions and credential roles were
+  unchanged and kept raw recovery/workflow evidence out of the public backup.
+- Hardened the operations-source installer to exclude runtime workflow stages
+  and RDB files; stale installed artifacts were moved to a private recoverable
+  backup rather than deleted.
+
 - Diagnosed bilingual 2024 current-year answers as missing server temporal
   context, not a quota, host-clock, or ERPNext-timezone failure.
 - Added a Frappe-generated authoritative date context with current date/year,
