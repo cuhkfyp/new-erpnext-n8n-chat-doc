@@ -1,5 +1,24 @@
 # Change log
 
+## 2026-09-02
+
+- Recorded partial higher-permission and restricted-user browser acceptance:
+  allowed `CCD Registration` reads succeeded, restricted `CCD Master` and
+  `hksr_rb` access was enforced by Frappe, and deterministic raw-SQL/write
+  refusals remained in place.
+- Diagnosed the restricted RB browser's generic error as two sequential,
+  independent results: the expected Frappe HTTP 403 permission rejection,
+  followed by Gemini HTTP 429 while formatting the denial because the active
+  `back 2` project had reached its 20-request daily quota.
+- Re-probed the n8n-managed `Gemini Generative v2 - back 3` credential without
+  exposing its value; it returned HTTP 200 with the expected smoke reply.
+- Switched only the chat and QueryPlan generation nodes to `back 3` through
+  n8n export/import/publish, leaving the embedding credential unchanged.
+- Reloaded n8n through the supplied persistent stop/start script. n8n and
+  Redis remained healthy, all three v2 workflows activated, and the v2 webhook
+  was registered. No workflow, credential, or SQLite volume was recreated.
+- Updated the authoritative implementation, n8n operations, and UAT records.
+
 ## 2026-09-01
 
 - Confirmed the legacy outage was caused by reverse-proxy routing to Frappe

@@ -856,6 +856,25 @@ Acceptance-gated work intentionally remains outside this implementation run:
   first probe ran before n8n's longer startup and returned HTTP 000; subsequent
   health was `ok`, all three v2 workflows activated, Redis returned `PONG`, all
   Frappe containers were up, and Apache configuration was valid.
+- On 2026-09-02, partial higher-permission and restricted-user browser
+  acceptance confirmed permitted `CCD Registration` reads, restricted
+  `CCD Master` and `hksr_rb` enforcement, and deterministic raw-SQL/write
+  refusals. The restricted RB request reached Frappe and was correctly rejected
+  with HTTP 403. The enclosing chat execution then failed while composing the
+  denial because the active `back 2` generative credential returned Gemini
+  HTTP 429 for its 20-request free-tier daily quota; the generic browser error
+  was therefore a quota presentation failure, not a permission bypass.
+- `Gemini Generative v2 - back 3` was rechecked without reading or exporting
+  its secret and returned HTTP 200 with the expected smoke reply. The supported
+  n8n export/import/publish path then changed only the QueryPlan generator and
+  chat model to the managed `back 3` credential. The embedding nodes remain on
+  the separate production embedding credential, and there is no automatic key
+  cycling. The supplied persistent stop/start procedure retained SQLite,
+  credentials, Redis, mounts, and the pinned n8n version. Subsequent health was
+  HTTP 200 and startup logs activated all three v2 workflows with the chat
+  webhook registered. Browser acceptance remains incomplete until the denied
+  RB request produces a clear user-facing refusal and the remaining matrix
+  below passes.
 
 Browser acceptance procedure:
 

@@ -111,10 +111,15 @@ Distinguish safety/permission failures from quota failures during UAT. On
 2026-09-01, the original production generative credential reached Gemini's
 20-request free-tier quota and a later general prompt failed with HTTP 429.
 The separately managed `Gemini Generative v2 - back 2` credential passed a
-point-in-time HTTP 200 probe and is now manually bound to both v2 generative
-nodes. `back 3` and `back 4` also passed; `back 1` was rate-limited/overloaded.
-Continue model-backed acceptance with `back 2`. If it later fails, diagnose the
-response and perform another explicit managed-credential change; do not
+point-in-time HTTP 200 probe and was manually bound to both v2 generative
+nodes. During restricted-user acceptance on 2026-09-02, Frappe correctly
+rejected an `hksr_rb` plan with HTTP 403, then the chat model returned HTTP 429
+because `back 2` had reached the same 20-request daily quota. `back 3` was
+re-probed through the inactive diagnostic workflow and returned HTTP 200 with
+the expected `OK`. Both v2 generative nodes are now explicitly bound to
+`back 3`, current and published versions match, and the persistent restart
+loaded them. Continue browser acceptance with `back 3`. Diagnose any later
+failure and perform another explicit managed-credential change; do not
 implement automatic key cycling. The embedding credential was not changed.
 
 This full-page launcher is temporary. After the nominated two-user matrix

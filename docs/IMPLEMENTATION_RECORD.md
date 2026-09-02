@@ -134,14 +134,16 @@ diagnostic workflow without exporting or printing their values.
 
 - One new credential was rate-limited or overloaded at test time.
 - Three returned valid Gemini responses.
-- One working credential was deliberately selected for both chat generation
-  and QueryPlan generation.
+- `back 2` was initially selected for both chat generation and QueryPlan
+  generation. After it reached the 20-request daily quota during restricted
+  acceptance on 2026-09-02, `back 3` was re-probed successfully and explicitly
+  selected for those same two nodes.
 - The separate production embedding credential was not changed.
 
-This was a manual switch, not a rotating key pool. Both updated workflows were
-republished and loaded through the persistent n8n restart procedure. Current
-and published definitions matched, and a normalized before/after comparison
-confirmed that workflow logic did not change.
+These were manual switches, not a rotating key pool. Both updated workflows
+were republished and loaded through the persistent n8n restart procedure.
+Current and published definitions matched, and the only 2026-09-02 workflow
+change was the managed credential reference on the two generative nodes.
 
 ## Verification completed
 
