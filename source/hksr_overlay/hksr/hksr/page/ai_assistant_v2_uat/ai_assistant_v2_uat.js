@@ -20,6 +20,36 @@
 		document.body.classList.remove("ai-assistant-v2-uat-open");
 	}
 
+	async function load_visible_history() {
+		try {
+			var response = await frappe.call({
+				method: "hksr.ai_assistant.api.chat_history",
+				type: "GET",
+			});
+			var messages = response && response.message && response.message.messages;
+			return Array.isArray(messages) ? messages : [];
+		} catch (error) {
+			return [];
+		}
+	}
+
+	function hydrate_visible_history(chat_app, messages) {
+		if (!chat_app || !Array.isArray(messages) || !messages.length) return;
+		var chat =
+			chat_app.config && chat_app.config.globalProperties
+				? chat_app.config.globalProperties.$chat
+				: null;
+		var message_state = chat && chat.messages;
+		if (message_state && typeof message_state === "object" && "value" in message_state) {
+			message_state.value = messages;
+		} else if (Array.isArray(message_state)) {
+			message_state.splice.apply(
+				message_state,
+				[0, message_state.length].concat(messages)
+			);
+		}
+	}
+
 	function stop_tail_follow(state) {
 		if (state.chat_observer) {
 			state.chat_observer.disconnect();
@@ -143,6 +173,7 @@
 			if (!config || !config.enabled || !config.webhook_url || !config.token || !config.session_id) {
 				throw new Error("Frappe did not return a complete v2 bootstrap response.");
 			}
+			var visible_history = await load_visible_history();
 
 			state.target.empty();
 			state.chat_app = window.N8nChat.createChat({
@@ -174,6 +205,7 @@
 					},
 				},
 			});
+			hydrate_visible_history(state.chat_app, visible_history);
 			start_tail_follow(state);
 
 			var minutes = Math.max(1, Math.floor(Number(config.expires_in || 0) / 60));

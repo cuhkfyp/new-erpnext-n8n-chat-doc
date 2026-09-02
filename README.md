@@ -29,6 +29,9 @@ public.
   implemented.
 - Browser requests use an opaque, session-bound token issued by Frappe; a raw
   Frappe SID or password is never sent to n8n.
+- Visible chat history is restored through an authenticated Frappe endpoint
+  and an opaque per-user Redis key. The same ERPNext account can restore it
+  after F5 or in another browser, while different users remain isolated.
 - Record queries execute through Frappe's permission-aware list API. Model-
   generated SQL, joins, writes, and arbitrary expressions are rejected.
 - The vector index contains schema metadata only and uses 768-dimensional

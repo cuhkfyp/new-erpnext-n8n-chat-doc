@@ -4,6 +4,33 @@
 
   var initialized = false;
 
+  async function loadVisibleHistory() {
+    try {
+      var response = await frappe.call({
+        method: "hksr.ai_assistant.api.chat_history",
+        type: "GET",
+      });
+      var messages = response && response.message && response.message.messages;
+      return Array.isArray(messages) ? messages : [];
+    } catch (error) {
+      console.info("ERPNext AI Assistant history is temporarily unavailable.");
+      return [];
+    }
+  }
+
+  function hydrateVisibleHistory(chatApp, messages) {
+    if (!chatApp || !Array.isArray(messages) || !messages.length) return;
+    var chat = chatApp.config && chatApp.config.globalProperties
+      ? chatApp.config.globalProperties.$chat
+      : null;
+    var messageState = chat && chat.messages;
+    if (messageState && typeof messageState === "object" && "value" in messageState) {
+      messageState.value = messages;
+    } else if (Array.isArray(messageState)) {
+      messageState.splice.apply(messageState, [0, messageState.length].concat(messages));
+    }
+  }
+
   async function initChat() {
     if (initialized) return;
     if (!window.frappe || !frappe.session || frappe.session.user === "Guest") return;
@@ -17,8 +44,10 @@
       var config = response && response.message;
       if (!config || !config.enabled) return;
 
+      var visibleHistory = await loadVisibleHistory();
+
       initialized = true;
-      N8nChat.createChat({
+      var chatApp = N8nChat.createChat({
         webhookUrl: window.location.origin + config.webhook_url,
         webhookConfig: {
           method: "POST",
@@ -44,6 +73,7 @@
           },
         },
       });
+      hydrateVisibleHistory(chatApp, visibleHistory);
     } catch (error) {
       // Disabled/unconfigured is intentionally silent; never fall back to the insecure webhook.
       console.info("ERPNext AI Assistant v2 is unavailable.");

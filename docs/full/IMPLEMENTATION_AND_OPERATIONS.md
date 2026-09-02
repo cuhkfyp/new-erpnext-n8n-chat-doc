@@ -52,14 +52,14 @@ the two-user acceptance gate is complete.
 | Query API | `hksr/ai_assistant/query_plan.py` | Strict QueryPlanV1 parser; rejects unknown keys, SQL, writes, joins, expressions, invalid fields/operators, and limits over 100. Executes only via `frappe.get_list`. |
 | Schema RAG | `hksr/ai_assistant/schema.py` | Produces deterministic schema-only chunks and SHA-256 hashes. It never queries document rows. |
 | Sync lifecycle | `hksr/ai_assistant/sync.py` | Seeds existing default DocTypes, queues after migrations without failing deployment, runs nightly at 02:30 site time, triggers n8n, and records status/counts/errors. |
-| Frappe APIs | `hksr/ai_assistant/api.py` | Adds `bootstrap`, `validate_session`, `schema_catalog`, `execute_query_plan`, `record_sync_result`, and `request_schema_sync`. |
+| Frappe APIs | `hksr/ai_assistant/api.py` | Adds `bootstrap`, authenticated user-scoped `chat_history`, `validate_session`, `schema_catalog`, `execute_query_plan`, `record_sync_result`, and `request_schema_sync`. |
 | ERPNext UI | `AI Assistant Settings` Single DocType | Adds enabled switch, environment paths, encrypted integration secret, result limits, DocType child allowlist, Sync Now, and read-only sync telemetry. System Manager only. |
-| Desk widget | `hksr/public/js/n8n_chat.js` | Calls Frappe bootstrap first; sends no username or cookie to n8n; places only the opaque token/session in supported chat-request metadata; has no insecure legacy fallback. Installed only during atomic cutover. |
-| Acceptance Page | `hksr/hksr/page/ai_assistant_v2_uat` | Provides `/app/ai-assistant-v2-uat` for logged-in browser testing without replacing the default widget. It bootstraps through Frappe, mounts the standard n8n client in-page, and hides the legacy floating widget only while the Page is open. Trigger-level visible-history reload is disabled because n8n processes it before workflow authentication; the agent still retains per-session Redis memory for conversational follow-ups. |
+| Desk widget | `hksr/public/js/n8n_chat.js` | Calls Frappe bootstrap first; sends no username or cookie to n8n; places only the opaque token/session in supported chat-request metadata; restores the active user's visible history through authenticated Frappe; has no insecure legacy fallback. Installed only during atomic cutover. |
+| Acceptance Page | `hksr/hksr/page/ai_assistant_v2_uat` | Provides `/app/ai-assistant-v2-uat` for logged-in browser testing without replacing the default widget. It bootstraps through Frappe, mounts the standard n8n client in-page, and hides the legacy floating widget only while the Page is open. Trigger-level visible-history reload is disabled because n8n processes it before workflow authentication; authenticated Frappe history restores the same user's Agent transcript. |
 | Frappe hooks | `hksr/hooks.py` marker block | Registers `after_migrate` and `30 2 * * *` schema-sync scheduling. The site timezone is confirmed as `Asia/Hong_Kong`. |
 | Schema sync workflow | `ERPNext Schema Sync v2` | Authenticated trigger; stable hash comparison; treats an empty first-run hash list as valid input; embeds only changed chunks; atomically upserts a complete batch; deletes stale chunks only after a complete successful run; routes catalog, Supabase, embedding, upsert, and delete failures to bounded Frappe status telemetry. |
 | Query workflow | `ERPNext Permissioned Query v2` | Revalidates the opaque token and active issuing Frappe session before retrieval/Gemini, retrieves only the environment namespace, requests JSON QueryPlanV1, and calls Frappe for permissioned execution. Cookies and CSRF values do not enter n8n. |
-| Chat workflow | `ERPNext AI Chat Assistant v2` | Validates before the model, explicitly keys Redis memory by the server-issued opaque session ID, and exposes only the permissioned query workflow as a data tool. |
+| Chat workflow | `ERPNext AI Chat Assistant v2` | Validates before the model, keys Redis memory only by the Frappe-validated opaque user history ID, and exposes only the permissioned query workflow as a data tool. |
 | Supabase | `supabase/detect_vector_schema.sql` and schema-specific `001_erpnext_schema_rag_v2*.sql` | Detects whether the existing vector extension lives in `extensions` or `public`, then creates a private 768-dimensional index and service-role-only RPCs without relocating or modifying legacy 3072-dimensional objects. |
 | n8n runtime | `n8n/docker-compose.v2.yml` | Pins tested n8n `2.21.7`, retains the existing data volume/error patch/VPN/direct-DB bypass, and adds non-secret environment configuration. Production is the safe default namespace; UAT/development must override it explicitly. |
 | Frappe runtime deployment | `deploy_shadow_backend.sh` | Preserves the Hksr tree, then installs the same AI module and hook state into backend, short queue, long queue, and scheduler containers with per-container backups. It stages files below the tracked workspace so snap-packaged Docker can read them, compiles each runtime copy, and fails closed if an expected worker is missing. |
@@ -1025,3 +1025,31 @@ URL in Frappe hooks, synchronizes it to runtimes, and preserves its existing
 asset backups/checksums. After cache clear and graceful Gunicorn reload, the
 effective hook and exact versioned public URL both resolved to the v2 loader.
 One user hard refresh remains necessary to destroy the old in-memory instance.
+
+### Authenticated visible-history retention
+
+Redis Agent memory survived F5, but the n8n client originally rebuilt an empty
+message view. Chat Trigger history loading remains disabled because n8n handles
+that action before the workflow can validate the Frappe session. The secure
+replacement loads visible messages through a separately authenticated Frappe
+API.
+
+Frappe derives an opaque user history ID with HMAC-SHA256 over the environment
+site ID and the actual logged-in ERPNext user, using the site encryption key.
+The browser never receives that ID and `chat_history` accepts no username,
+session ID, or Redis key. The n8n Agent gets the same ID only from the already
+validated Frappe response. This lets the same ERPNext account restore its
+history after F5 or in another browser while isolating every other account.
+
+The Frappe site needs a private n8n Redis URL supplied through environment/site
+configuration. Do not publish Redis passwords. Visible history is normalized
+to human/assistant text, bounded to 100 messages and 500,000 characters, and
+expires eight hours after the most recent Agent turn. Fixed safety refusals
+that occur before the Agent are not guaranteed to be stored.
+
+Bootstrap can migrate a former session-key list when the authenticated mapping
+still exists. The merge is bounded, deduplicated, and TTL-preserving. Any
+ambiguous pre-upgrade list must be left to expire instead of assigning it to a
+user speculatively. Verification requires guest history HTTP 403, empty direct
+n8n trigger history, same-user F5/second-browser restoration, and cross-user
+isolation.

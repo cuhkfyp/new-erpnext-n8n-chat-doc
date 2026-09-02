@@ -167,7 +167,7 @@
       },
       {
         "parameters": {
-          "sessionKey": "={{ $('Capture Browser Auth Context').first().json.sessionId }}",
+          "sessionKey": "={{ $('Validate Frappe Session Before Gemini').first().json.message.history_id }}",
           "sessionTTL": 28800
         },
         "id": "redis-memory-v2",

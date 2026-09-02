@@ -47,7 +47,9 @@ decisions because they intentionally affect shared infrastructure.
 - English and Traditional Chinese prompts;
 - natural business labels, translations, and abbreviations;
 - empty results; and
-- Redis-backed same-session follow-up context.
+- Redis-backed same-user follow-up context;
+- visible history after F5 and in a second browser for the same ERPNext user;
+- no visible history crossing between the nominated ERPNext users;
 - direct current-date/year questions grounded in Frappe; and
 - English and Chinese relative-date filters using exact server year/month
   boundaries, including when old Redis memory contains a stale year.
@@ -94,6 +96,18 @@ query.
 
 Workflow, credential, SQLite, Redis, routing, and schema-index state must retain
 their documented persistence characteristics.
+
+For visible history, each nominated user must create at least one normal Agent
+turn, then pass these checks before the Redis TTL expires:
+
+- F5 restores that user's human and assistant bubbles;
+- another browser logged in as the same user restores the same transcript;
+- the other nominated user sees none of those messages;
+- a guest Frappe history request returns HTTP 403; and
+- a direct n8n `loadPreviousSession` request returns no stored transcript.
+
+Fixed pre-Agent safety refusals are not guaranteed to be in Redis history.
+Use a greeting or permitted data question for the persistence test.
 
 Production result on 2026-09-02: the five existing Redis keys survived repeated
 Compose-managed recreation from the named AOF-backed volume, n8n stayed HTTP

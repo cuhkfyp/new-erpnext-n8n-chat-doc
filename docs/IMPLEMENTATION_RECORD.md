@@ -22,10 +22,13 @@ An `AI Assistant Settings` Single DocType was added with:
 - a manual `Sync Now` action; and
 - read-only sync status, counts, timestamps, drift, and error fields.
 
-The authenticated backend exposes four narrow APIs:
+The authenticated backend exposes five narrow APIs:
 
 - `bootstrap` returns an environment-specific webhook URL, a short-lived opaque
   token bound to the real browser session, and a non-PII chat session ID;
+- `chat_history` accepts no username, session ID, or history key and returns
+  only the current authenticated ERPNext user's bounded human/assistant Redis
+  transcript;
 - `schema_catalog` returns normalized allowlisted schema metadata and stable
   hashes, never record values;
 - `execute_query_plan` validates a `QueryPlanV1`, the browser session, allowlist,
@@ -65,8 +68,9 @@ Three v2 workflows were created:
    environment namespace, asks Gemini for strict QueryPlanV1 JSON, validates
    the plan, and calls Frappe for execution.
 3. `ERPNext AI Chat Assistant v2` validates the real Frappe session before any
-   model call, keeps per-session Redis memory, and exposes the permissioned
-   query workflow as its only ERPNext data tool.
+   model call, keeps Redis memory under a Frappe-derived opaque user history
+   ID, and exposes the permissioned query workflow as its only ERPNext data
+   tool.
 
 Deterministic gates reject raw SQL, write intent, credential or secret requests,
 and common injection shapes after session validation but before Gemini. A
@@ -133,6 +137,35 @@ chat layout:
 
 These are presentation-only changes. The authentication, permission, and
 workflow contracts are unchanged.
+
+## Authenticated visible history
+
+The lower-right widget now restores visible messages after F5 and in another
+browser logged in as the same ERPNext user. Frappe derives an opaque `u2_`
+Redis key with HMAC-SHA256 over the site ID and authenticated user, using the
+site encryption key. The browser never receives this key and cannot submit a
+username or history identity.
+
+The validated n8n workflow receives `history_id` only after the opaque browser
+token has been checked by Frappe, and the Agent memory node uses that value as
+its Redis session key. The separately authenticated `chat_history` API derives
+the same key from the active Frappe login and returns only normalized human and
+assistant text. History is bounded to 100 visible messages and 500,000
+characters and expires eight hours after the most recent Agent turn.
+
+n8n Chat Trigger `loadPreviousSession` remains disabled because it handles
+history before workflow authentication. A direct trigger history request
+therefore returns no stored messages. Guest Frappe history requests return
+HTTP 403. The nominated higher-permission and restricted accounts resolve to
+distinct history keys, so neither can select or retrieve the other's
+transcript.
+
+Bootstrap can merge a former browser-session list into the user key when the
+old authenticated session mapping is still available. The merge is bounded,
+deduplicated, TTL-preserving, and removes only the migrated source key. An
+ambiguous pre-upgrade list must expire rather than be assigned speculatively.
+Deterministic safety refusals occur before Agent memory and are not guaranteed
+to appear in restored history.
 
 ## Gemini credential follow-up
 

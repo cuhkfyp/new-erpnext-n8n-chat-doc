@@ -22,7 +22,7 @@ must remain outside a public documentation repository.
 | Gemini generative | Used only by chat generation and QueryPlan generation. |
 | Gemini embedding | Used only for 768-dimensional schema indexing and retrieval. |
 | Supabase service | Accesses only that environment's isolated schema-vector project. |
-| Redis | Stores bounded chat memory keyed by the opaque non-PII session ID. |
+| Redis | Stores bounded chat memory keyed by a Frappe-derived opaque per-user history ID. |
 | n8n encryption key | Encrypts n8n-managed credentials at rest and must remain stable across restarts. |
 
 Never place these values in workflow JSON, documentation, shell history, source
@@ -107,6 +107,25 @@ volume until the named volume passes an independent recreation. Verify the
 expected key count, AOF load/write health, n8n HTTP health, and all three v2
 workflow activations after recreation. Never commit the RDB or raw workflow
 exports.
+
+### User-visible history
+
+Configure Frappe with the environment's private n8n Redis URL. Keep any Redis
+password in site configuration or a managed secret, never in workflow JSON or
+public documentation. The Frappe `chat_history` API must remain authenticated
+and accept no username, session ID, or Redis key from its caller.
+
+Keep Chat Trigger `loadPreviousSession` set to `notSupported`; it is processed
+before workflow authentication. The n8n Agent memory key must come only from
+`validate_session.message.history_id`. The Desk widget should call Frappe for
+history and hydrate only normalized user/bot messages returned for the active
+ERPNext login.
+
+The current retention is eight hours after the most recent Agent turn. F5 does
+not extend it by itself. Same-user access from another browser is expected;
+cross-user visibility is a security failure. After changes, verify guest
+history is HTTP 403, direct n8n history returns no stored messages, and two
+nominated users derive distinct opaque keys without printing those keys.
 
 ## Deferred host-reboot checkpoint
 

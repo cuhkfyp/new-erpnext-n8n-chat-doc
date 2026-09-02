@@ -12,8 +12,14 @@ from frappe.utils import get_first_day, get_last_day, get_system_timezone, nowda
 from hksr.ai_assistant.auth import (
 	browser_user_context,
 	issue_browser_token,
+	require_authenticated_user,
 	validate_browser_token,
 	validate_integration_key,
+)
+from hksr.ai_assistant.history import (
+	get_user_history_id,
+	get_visible_history,
+	migrate_session_history,
 )
 from hksr.ai_assistant.query_plan import execute_query_plan as run_query_plan
 from hksr.ai_assistant.schema import build_schema_catalog, get_site_id
@@ -25,14 +31,20 @@ def bootstrap() -> dict[str, Any]:
 	settings = _enabled_settings()
 	webhook_url = frappe.conf.get("ai_assistant_webhook_url") or settings.webhook_url
 	webhook_url = _validate_same_origin_webhook_path(webhook_url)
-	token_data = issue_browser_token(get_site_id(settings))
+	site_id = get_site_id(settings)
+	token_data = issue_browser_token(site_id)
+	migrate_session_history(
+		token_data["session_id"],
+		token_data["history_id"],
+		token_data["expires_in"],
+	)
 	return {
 		"enabled": True,
 		"webhook_url": webhook_url,
 		"session_id": token_data["session_id"],
 		"token": token_data["token"],
 		"expires_in": token_data["expires_in"],
-		"site_id": get_site_id(settings),
+		"site_id": site_id,
 	}
 
 
@@ -40,11 +52,24 @@ def bootstrap() -> dict[str, Any]:
 def validate_session() -> dict[str, Any]:
 	_enabled_settings()
 	context = validate_browser_token()
+	history_id = str(context.get("history_id") or get_user_history_id(context["user"], context["site_id"]))
 	return {
 		"valid": True,
 		"session_id": context["chat_session_id"],
+		"history_id": history_id,
 		"site_id": context["site_id"],
 		"date_context": _server_date_context(),
+	}
+
+
+@frappe.whitelist()
+def chat_history() -> dict[str, Any]:
+	"""Return Redis memory for only the currently authenticated ERPNext user."""
+	settings = _enabled_settings()
+	user = require_authenticated_user()
+	return {
+		"messages": get_visible_history(user, get_site_id(settings)),
+		"expires_in": 8 * 60 * 60,
 	}
 
 

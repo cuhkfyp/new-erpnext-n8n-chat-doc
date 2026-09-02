@@ -19,11 +19,15 @@ Operational changes from the legacy widget:
   or CSRF value. During the isolated production canary, chat and permissioned
   query are published. The tested authenticated schema-only workflow is also
   published for automatic post-migrate/nightly synchronization;
-- Redis memory is explicitly keyed by Frappe's opaque non-PII session ID, and
+- Redis memory is explicitly keyed by a Frappe-derived opaque non-PII user
+  history ID, and
   schema-sync transport/error outputs record bounded failure telemetry without
   entering the stale-deletion branch. Trigger-level visible-history reload is
   disabled because Chat Trigger handles it before workflow authentication;
-  agent memory still serves normal same-session follow-ups;
+  the widget instead loads normalized human/assistant messages from Frappe's
+  authenticated `chat_history` API. This preserves the same user's transcript
+  across F5 and another browser for the Redis TTL while preventing one ERPNext
+  user from selecting or reading another user's key;
 - Gemini generative, Gemini embedding, Frappe sync, Supabase, and Redis
   credentials are bound through n8n credential storage, not workflow JSON;
 - the exact production Apache route maps one v2 chat ID for the isolated
@@ -80,6 +84,16 @@ credential for schema-sync APIs. It is not a Gemini key, Supabase encryption
 key, browser token, or `N8N_ENCRYPTION_KEY`. Normal chat receives an ephemeral
 token/session automatically from authenticated Frappe bootstrap; an
 uncredentialed or forged webhook request is expected to fail before Gemini.
+
+Visible history requires the private n8n Redis URL in Frappe site
+configuration. Use the environment's private Docker DNS name and managed
+secret mechanism; never place a Redis password in source or public
+documentation. Frappe derives the Redis key with HMAC-SHA256 from its site
+encryption key, site ID, and authenticated ERPNext user. The browser never
+receives that history ID, and `chat_history` accepts no username or history-key
+parameter. The n8n Agent uses only the `history_id` returned by the already
+validated Frappe session. Keep Chat Trigger `loadPreviousSession` set to
+`notSupported`.
 
 Canary UI note: n8n executions `292`/`293` completed the live data question
 successfully while the browser showed only the top edge of the reply. The

@@ -62,8 +62,26 @@ headers to downstream nodes. UAT must therefore use the tracked Page/widget
 metadata transport: `aiSessionToken` plus the matching opaque `aiSessionId`.
 Never add a username, cookie/SID, or CSRF value to that metadata. Keep
 trigger-level `loadPreviousSession` disabled because that action runs before
-workflow authentication; the Agent's Redis memory remains enabled for normal
-same-session follow-up questions.
+workflow authentication. Configure Frappe's private Redis connection, key Agent
+memory from the validated `history_id`, and load visible messages only through
+the authenticated `hksr.ai_assistant.api.chat_history` endpoint. That endpoint
+takes no user or history-key argument.
+
+After each nominated user creates at least one safe conversation turn, test
+all of the following before acceptance:
+
+- F5 restores that user's visible human and assistant messages;
+- a second browser logged in as the same ERPNext user restores the same
+  messages while their Redis TTL remains;
+- signing in as the other nominated user does not show the first user's
+  transcript;
+- guest access to `chat_history` is HTTP 403;
+- a direct n8n `loadPreviousSession` request returns no stored messages; and
+- Redis/n8n stop-start retains the user-scoped lists and remaining TTL.
+
+Safety-gate refusals occur before Agent memory and are not promised as durable
+history. Normal greetings, data questions, tool results, and follow-ups that
+reach the Agent are retained for eight hours after the most recent turn.
 
 The acceptance Page includes scoped grid-shell and tail-follow corrections.
 Preserve both the tracked Page CSS and JavaScript when promoting to

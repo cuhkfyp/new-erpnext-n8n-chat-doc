@@ -11,7 +11,8 @@ and version UUIDs were also replaced with explicit examples.
 
 - `hksr_overlay/` — Frappe authentication, session validation, schema catalog,
   QueryPlanV1 validation/execution, synchronization, Settings DocTypes, secure
-  Desk loader, acceptance Page, authoritative server-date context, and tests.
+  per-user Redis history, Desk loader, acceptance Page, authoritative
+  server-date context, and tests.
 - `n8n/workflows/` — inactive generic templates for schema sync, permissioned
   query, and authenticated chat. Credential references remain `CONFIGURE_*`
   placeholders.
@@ -58,5 +59,10 @@ and version UUIDs were also replaced with explicit examples.
 4. Keep the workflow templates inactive until bindings and negative tests pass.
 5. Run `tests/test_static_contracts.sh`.
 6. Follow the operations and acceptance documents in the repository root.
+
+Visible history requires a private Redis URL in Frappe site configuration.
+The browser must never receive the derived history key, and n8n Chat Trigger
+history loading must stay disabled. Frappe's authenticated `chat_history` API
+is the only supported browser history path.
 
 Never deploy this public copy by blindly reusing example values.

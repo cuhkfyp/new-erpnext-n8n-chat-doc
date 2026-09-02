@@ -68,7 +68,7 @@ jq -e '
   and ([$workflow.nodes[] | .parameters.jsCode? // ""] | all(contains("__NOT_ALLOWLISTED__") | not))
 ' \
   "${ROOT_DIR}/n8n/workflows/erpnext-permissioned-query-v2.json" >/dev/null
-jq -e '.[0].nodes[] | select(.name == "Opaque Session Redis Memory") | .parameters.sessionKey | contains("Capture Browser Auth Context")' \
+jq -e '.[0].nodes[] | select(.name == "Opaque Session Redis Memory") | .parameters.sessionKey | contains("Validate Frappe Session Before Gemini") and contains("history_id")' \
   "${ROOT_DIR}/n8n/workflows/erpnext-ai-chat-assistant-v2.json" >/dev/null
 jq -e '
   .[0] as $workflow
@@ -97,6 +97,13 @@ rg -q 'aiSessionToken: config\.token' \
   "${ROOT_DIR}/hksr_overlay/hksr/hksr/page/ai_assistant_v2_uat/ai_assistant_v2_uat.js"
 rg -q 'loadPreviousSession: false' \
   "${ROOT_DIR}/hksr_overlay/hksr/hksr/page/ai_assistant_v2_uat/ai_assistant_v2_uat.js"
+rg -q 'hksr\.ai_assistant\.api\.chat_history' \
+  "${ROOT_DIR}/hksr_overlay/hksr/hksr/page/ai_assistant_v2_uat/ai_assistant_v2_uat.js" \
+  "${ROOT_DIR}/hksr_overlay/hksr/public/js/n8n_chat.js"
+rg -q 'hydrate_visible_history' \
+  "${ROOT_DIR}/hksr_overlay/hksr/hksr/page/ai_assistant_v2_uat/ai_assistant_v2_uat.js"
+rg -q 'hydrateVisibleHistory' \
+  "${ROOT_DIR}/hksr_overlay/hksr/public/js/n8n_chat.js"
 rg -Fq 'height: clamp(520px, calc(100dvh - 300px), 760px)' \
   "${ROOT_DIR}/hksr_overlay/hksr/hksr/page/ai_assistant_v2_uat/ai_assistant_v2_uat.css"
 rg -q '\.ai-assistant-v2-uat-chat \.chat-messages-list' \
@@ -156,6 +163,14 @@ jq -e '
         | all($workflow.nodes[]; ((.parameters.headerParameters.parameters // []) | map(.name) | index($header)) == null)))
 ' "${ROOT_DIR}/n8n/workflows/erpnext-permissioned-query-v2.json" >/dev/null
 rg -q 'frappe_sid' "${ROOT_DIR}/hksr_overlay/hksr/ai_assistant/auth.py"
+rg -q '^def chat_history()' \
+  "${ROOT_DIR}/hksr_overlay/hksr/ai_assistant/api.py"
+rg -q '^def get_user_history_id' \
+  "${ROOT_DIR}/hksr_overlay/hksr/ai_assistant/history.py"
+rg -q 'hmac\.new' \
+  "${ROOT_DIR}/hksr_overlay/hksr/ai_assistant/history.py"
+rg -q 'ai_assistant_memory_redis_url' \
+  "${ROOT_DIR}/hksr_overlay/hksr/ai_assistant/history.py"
 rg -q '"date_context": _server_date_context()' \
   "${ROOT_DIR}/hksr_overlay/hksr/ai_assistant/api.py"
 rg -q '^def _server_date_context()' \

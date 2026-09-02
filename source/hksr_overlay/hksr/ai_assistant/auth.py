@@ -11,6 +11,8 @@ from typing import Any
 import frappe
 from frappe import _
 
+from hksr.ai_assistant.history import get_user_history_id
+
 TOKEN_HEADER = "X-AI-Assistant-Token"
 SESSION_HEADER = "X-AI-Assistant-Session"
 INTEGRATION_HEADER = "X-AI-Assistant-Integration-Key"
@@ -35,6 +37,7 @@ def issue_browser_token(site_id: str) -> dict[str, Any]:
 	session_digest = _sha256(frappe_sid)
 	ttl = _token_ttl_seconds()
 	chat_session_id = _get_or_create_chat_session_id(session_digest, ttl)
+	history_id = get_user_history_id(user, site_id)
 	token = secrets.token_urlsafe(32)
 	token_digest = _sha256(token)
 
@@ -45,6 +48,7 @@ def issue_browser_token(site_id: str) -> dict[str, Any]:
 			"frappe_sid": frappe_sid,
 			"session_digest": session_digest,
 			"chat_session_id": chat_session_id,
+			"history_id": history_id,
 			"site_id": site_id,
 			"issued_at": int(time.time()),
 		},
@@ -53,6 +57,7 @@ def issue_browser_token(site_id: str) -> dict[str, Any]:
 	return {
 		"token": token,
 		"session_id": chat_session_id,
+		"history_id": history_id,
 		"expires_in": ttl,
 	}
 
