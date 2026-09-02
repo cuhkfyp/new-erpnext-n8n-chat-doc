@@ -102,6 +102,13 @@ credential roles were unchanged. The Redis host prerequisite was persisted and
 a final recreation loaded without the earlier overcommit warning. Host reboot
 remains pending an explicit maintenance window.
 
+The read-only precheck is now implemented. Its first production capture passed
+all live application/storage checks but correctly refused reboot readiness
+because nine long-lived Frappe containers use `on-failure` and no enabled
+Frappe boot service was found. Correct the persistent Compose restart policy
+and recapture before scheduling the reboot; do not treat a blocked capture as a
+completed persistence test.
+
 ## UI regression tests
 
 - Initial assistant message is fully visible.

@@ -21,6 +21,8 @@ and version UUIDs were also replaced with explicit examples.
   configuration.
 - `n8n/apply_redis_host_tuning.sh` — idempotent status/apply helper for Redis's
   persistent `vm.overcommit_memory = 1` host prerequisite.
+- `operations/reboot_persistence_check.sh` — read-only pre/post Ubuntu reboot
+  checkpoint and verification helper; it never starts or changes services.
 - `n8n/production.env.example` — sanitized non-secret production runtime
   example.
 - `n8n/workflows.rendered.example.json` — inactive rendered example with

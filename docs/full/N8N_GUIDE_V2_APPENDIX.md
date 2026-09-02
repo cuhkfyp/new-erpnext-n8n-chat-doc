@@ -195,3 +195,17 @@ data and workflow exports never belong in the public repository.
 The 2026-09-02 production run preserved all five existing keys through repeated
 named-volume recreation and a final post-tuning recreation; normalized v2
 workflow content and credential roles remained unchanged.
+
+### Host reboot procedure
+
+Run `operations/reboot_persistence_check.sh capture` before approving a reboot.
+It creates a private baseline and refuses readiness if required containers lack
+a daemon-restart-capable policy. After an operator reboots Ubuntu, run `verify`;
+the script requires a changed boot ID and checks the saved application,
+storage, workflow, proxy, mount, and configuration invariants. It never starts
+or modifies services.
+
+The first production capture is blocked because nine long-lived Frappe
+containers use `on-failure`, and no enabled Frappe boot unit was detected.
+Persist a reboot-capable policy in the Frappe Compose source and capture again
+before the maintenance window.

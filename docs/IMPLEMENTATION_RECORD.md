@@ -184,3 +184,11 @@ workflow definitions and credential roles did not change. The host now
 persistently applies `vm.overcommit_memory = 1` through an idempotent tracked
 helper. Remaining explicit-impact work is the host-reboot/provider-failure
 decision followed by an approved atomic widget cutover.
+
+A tracked read-only `capture`/`verify` script now preserves the pre-reboot
+baseline and compares the recovered host without exporting workflow or
+credential data. Its initial capture found a pre-existing blocker: all nine
+long-lived Frappe containers use Docker's `on-failure` policy, which does not
+restart them when the daemon restarts, and no enabled Frappe boot service was
+present. All current health checks passed, but reboot readiness remains false
+until the persistent Frappe Compose policy is corrected and recaptured.

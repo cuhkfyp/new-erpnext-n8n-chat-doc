@@ -163,3 +163,11 @@ recreation loaded without its earlier warning.
 Container-recreation persistence is accepted. A host reboot and deliberate
 production provider-failure injection remain separate explicit-impact tests;
 they require a maintenance decision and are not implied by browser UAT.
+
+### Host-reboot precheck
+
+The tracked read-only reboot checker passed the current application, storage,
+workflow, proxy, and configuration checks but reported `REBOOT NOT READY`.
+Nine long-lived Frappe containers use Docker's `on-failure` policy, and no
+enabled Frappe boot service was found. Correct and apply the persistent Frappe
+Compose policy, then recapture with zero failures before reboot UAT.

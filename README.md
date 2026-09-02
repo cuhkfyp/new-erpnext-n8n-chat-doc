@@ -42,6 +42,10 @@ public.
   host-memory prerequisite.
 - Host reboot and deliberate provider-failure injection remain explicit-impact
   tests that require a maintenance decision before widget cutover.
+- The read-only reboot precheck is prepared, but currently reports nine
+  pre-existing Frappe restart-policy blockers. The host must not be rebooted
+  for acceptance until the persistent Frappe Compose policy is corrected and
+  the checkpoint reports zero failures.
 - A separately managed Gemini generative credential was manually selected
   after a point-in-time health test. Automatic key cycling remains disabled.
 - Frappe now supplies an authoritative current date/year and exact date ranges

@@ -108,6 +108,26 @@ expected key count, AOF load/write health, n8n HTTP health, and all three v2
 workflow activations after recreation. Never commit the RDB or raw workflow
 exports.
 
+## Host-reboot checkpoint
+
+Run `source/operations/reboot_persistence_check.sh capture` before approving a
+host reboot. The script writes a private baseline of checksums and non-secret
+health metadata. It checks reboot-capable restart policies as well as Redis,
+n8n, Frappe, Apache, VPN/proxy, persistent mounts, and tracked configuration.
+It never starts, restarts, updates, or reboots a service.
+
+After the Ubuntu host is rebooted by an operator, run the script with `verify`.
+It requires a changed boot ID and compares the recovered system with the saved
+baseline. Do not proceed when `capture` reports a blocker.
+
+The production precheck on 2026-09-02 found nine long-lived Frappe containers
+using `on-failure` and no enabled Frappe boot service. Docker explicitly states
+that `on-failure` does not restart a container when the daemon restarts.
+[Docker restart-policy documentation](https://docs.docker.com/engine/containers/start-containers-automatically/)
+Therefore the host is not reboot-ready: persist a reboot-capable policy in the
+Frappe Compose source, apply it without changing volumes or one-shot setup
+services, and recapture until the script reports zero failures.
+
 ## Cutover
 
 After the two-user acceptance matrix passes:

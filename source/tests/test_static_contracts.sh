@@ -175,6 +175,13 @@ rg -q -- '--appendonly.*yes' "${ROOT_DIR}/n8n/docker-compose.v2.yml"
 bash -n "${ROOT_DIR}/n8n/apply_redis_host_tuning.sh"
 rg -q 'vm\.overcommit_memory' "${ROOT_DIR}/n8n/apply_redis_host_tuning.sh"
 rg -q '/etc/sysctl\.d/90-n8n-redis\.conf' "${ROOT_DIR}/n8n/apply_redis_host_tuning.sh"
+bash -n "${ROOT_DIR}/operations/reboot_persistence_check.sh"
+rg -q 'PRE_REBOOT_BOOT_ID' "${ROOT_DIR}/operations/reboot_persistence_check.sh"
+rg -q 'RESTART_POLICY_BLOCKERS' "${ROOT_DIR}/operations/reboot_persistence_check.sh"
+rg -q 'active_v2_count' "${ROOT_DIR}/operations/reboot_persistence_check.sh"
+rg -q 'this script still does not initiate the reboot' "${ROOT_DIR}/operations/reboot_persistence_check.sh"
+! rg -q 'docker (container )?(start|restart|update)|systemctl (start|restart|reboot)|(^|[[:space:]])reboot([[:space:]]|$)' \
+  "${ROOT_DIR}/operations/reboot_persistence_check.sh"
 rg -Fq -- "--exclude='.runtime-workflow-stage/'" "${ROOT_DIR}/install_operations_source.sh"
 rg -Fq -- "--exclude='*.rdb'" "${ROOT_DIR}/install_operations_source.sh"
 rg -q 'frappe_docker-queue-short-1 frappe_docker-queue-long-1 frappe_docker-scheduler-1' \

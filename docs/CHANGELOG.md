@@ -17,6 +17,11 @@
 - Hardened the operations-source installer to exclude runtime workflow stages
   and RDB files; stale installed artifacts were moved to a private recoverable
   backup rather than deleted.
+- Added a read-only, private-baseline host-reboot `capture`/`verify` helper that
+  never starts or changes services.
+- Ran the precheck and blocked reboot readiness after finding nine long-lived
+  Frappe containers on Docker's daemon-restart-incompatible `on-failure`
+  policy; every current application/storage health check otherwise passed.
 
 - Diagnosed bilingual 2024 current-year answers as missing server temporal
   context, not a quota, host-clock, or ERPNext-timezone failure.

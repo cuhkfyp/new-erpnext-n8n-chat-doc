@@ -982,3 +982,18 @@ maintenance window before atomic widget cutover.
 The operations-source installer excludes runtime workflow stages, temporary
 runtime-stage directories, and RDB files. Previously installed runtime
 artifacts were moved to a private recoverable backup and are not published.
+
+### Host-reboot checkpoint
+
+The tracked `operations/reboot_persistence_check.sh` helper has separate
+`capture`, `verify`, and `status` actions. It records a private baseline of
+checksums and non-secret health values, requires a changed boot ID after reboot,
+and verifies Redis, n8n, v2 workflow activation, Frappe, Apache, VPN/proxy,
+mounts, images, policies, and tracked configuration. It never starts, restarts,
+updates, or reboots a service.
+
+The initial production capture passed every live application and storage check
+but reported `REBOOT NOT READY`: nine long-lived Frappe containers use
+`on-failure`, which does not restart them after a Docker daemon restart, and no
+enabled Frappe boot service was detected. The persistent Frappe Compose policy
+must be corrected and recaptured before scheduling host-reboot acceptance.
