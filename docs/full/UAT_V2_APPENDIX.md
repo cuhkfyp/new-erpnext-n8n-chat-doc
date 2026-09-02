@@ -132,6 +132,11 @@ restoring the normal lower-right Desk presentation. Retain this Page only for
 diagnosis until post-cutover browser smoke passes. Do not point the widget back
 to the legacy raw-SQL workflow.
 
+The normal-Desk retest must use a hard refresh after the cache-versioned hook is
+deployed. Route navigation alone can retain the pre-cutover widget inside the
+already-running single-page Desk. Verify the v2 permission-aware subtitle
+before sending the greeting/data smoke questions.
+
 ### Relative-date UAT regression
 
 Confirm authenticated Frappe validation returns a consistent date, year,

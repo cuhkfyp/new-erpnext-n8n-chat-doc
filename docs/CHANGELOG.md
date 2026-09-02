@@ -15,6 +15,11 @@
   forged-request safe failure, n8n/Redis health, VPN health, and required Frappe
   container health. Normal logged-in Desk smoke remains before legacy workflow
   deactivation.
+- Diagnosed the first normal-Desk screenshot as a legacy widget instance kept
+  alive by an already-open single-page Desk tab, not a v2 route regression.
+- Added a versioned widget URL to Frappe hooks, resynchronized runtimes, cleared
+  site cache, and gracefully reloaded Gunicorn without restarting containers.
+  The effective hook and exact versioned public asset now resolve to v2.
 
 - Verified the automatic nightly schema repair and a manual repair run against
   the same four-DocType, thirteen-chunk catalog with zero drift.

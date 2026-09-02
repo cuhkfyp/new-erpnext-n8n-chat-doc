@@ -156,6 +156,13 @@ Desk widget now uses v2; this is not a return to the legacy raw-SQL workflow.
 Retain the acceptance Page only for diagnosis until post-cutover browser smoke
 passes.
 
+Use a versioned Desk loader URL at cutover. An already-open Frappe Desk tab is a
+single-page application and retains its old JavaScript widget across route
+navigation even after the server file changes. The deployment helper versions
+the hook, backs up and checksum-verifies both asset copies, and the operator
+clears site cache and gracefully reloads Gunicorn. Users then hard-refresh once
+and verify the v2 permission-aware subtitle.
+
 Frappe's standard `frappe.desk.reportview.delete_bulk` publishes a successful
 bulk-delete message over realtime to the username that initiated the job. If
 multiple browsers share `Administrator`, a deletion started from an unrelated

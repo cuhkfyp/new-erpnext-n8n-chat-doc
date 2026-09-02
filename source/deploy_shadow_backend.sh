@@ -11,6 +11,8 @@ RUNTIME_PACKAGE="/home/frappe/frappe-bench/apps/hksr/hksr"
 RUNTIME_CONTAINERS="${HKSR_RUNTIME_CONTAINERS:-frappe_docker-queue-short-1 frappe_docker-queue-long-1 frappe_docker-scheduler-1}"
 FRONTEND_CONTAINER="${HKSR_FRONTEND_CONTAINER:-frappe_docker-frontend-1}"
 FRONTEND_WIDGET_ASSET="/home/frappe/frappe-bench/sites/assets/hksr/js/n8n_chat.js"
+WIDGET_ASSET_PATH="/assets/hksr/js/n8n_chat.js"
+WIDGET_ASSET_VERSION="${AI_WIDGET_ASSET_VERSION:-ai-v2-YYYYMMDD-1}"
 BEGIN_MARKER="# BEGIN HKSR ERPNext AI Assistant v2 hooks"
 END_MARKER="# END HKSR ERPNext AI Assistant v2 hooks"
 
@@ -81,8 +83,25 @@ awk -v begin="${BEGIN_MARKER}" -v end="${END_MARKER}" '
 ' "${hooks_candidate}" > "${hooks_with_v2}"
 install -m 0644 "${hooks_with_v2}" "${APP_PACKAGE}/hooks.py"
 
+if [[ "${MODE}" == "cutover-widget" ]]; then
+  hooks_with_widget="$(mktemp)"
+  trap 'rm -f -- "${hooks_candidate}" "${hooks_with_v2}" "${hooks_with_widget}"' EXIT
+  if ! awk -v path="${WIDGET_ASSET_PATH}" -v version="${WIDGET_ASSET_VERSION}" '
+    index($0, path) {
+      sub(path "(\\?v=[^\"]*)?", path "?v=" version)
+      updated = 1
+    }
+    { print }
+    END { if (!updated) exit 43 }
+  ' "${APP_PACKAGE}/hooks.py" > "${hooks_with_widget}"; then
+    echo "Could not version the n8n widget URL in Hksr hooks." >&2
+    exit 7
+  fi
+  install -m 0644 "${hooks_with_widget}" "${APP_PACKAGE}/hooks.py"
+fi
+
 runtime_stage="$(mktemp -d "${SCRIPT_DIR}/.runtime-stage.XXXXXX")"
-trap 'rm -f -- "${hooks_candidate}" "${hooks_with_v2}"; rm -rf -- "${runtime_stage}"' EXIT
+trap 'rm -f -- "${hooks_candidate}" "${hooks_with_v2}" "${hooks_with_widget:-}"; rm -rf -- "${runtime_stage}"' EXIT
 copy_tree "${OVERLAY_ROOT}/ai_assistant" "${runtime_stage}/ai_assistant"
 copy_tree "${OVERLAY_ROOT}/hksr/doctype" "${runtime_stage}/hksr/doctype"
 if [[ -d "${OVERLAY_ROOT}/hksr/page" ]]; then

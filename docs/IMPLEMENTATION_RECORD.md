@@ -207,3 +207,10 @@ token/session metadata, window mode, and disabled unauthenticated history
 loading. Post-change Apache, guest/forged rejection, n8n, Redis, VPN, and Frappe
 health checks passed. A logged-in normal-Desk hard-refresh smoke remains before
 the old workflows are deactivated but retained for fourteen days.
+
+The first normal-Desk screenshot was still an old in-memory widget retained
+across single-page route navigation. The deployment helper now versions the
+widget URL in Frappe hooks as well as backing up/checking both asset copies.
+After site-cache clear and graceful Gunicorn reload, the effective hook and
+versioned public response both resolved to v2. Users must hard-refresh once to
+destroy a widget that was already running before cutover.

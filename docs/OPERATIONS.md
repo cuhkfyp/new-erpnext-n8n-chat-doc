@@ -142,6 +142,13 @@ served by the normal lower-right Desk widget and server-side post-change health
 checks passed. Complete step 7 from a normal logged-in Desk page before
 deactivating the legacy workflows.
 
+The Desk loader URL must be versioned during cutover. Frappe Desk preserves
+JavaScript already running in an open tab while navigating between routes, so
+replacing an unversioned server file does not replace that instance. After
+deploying the versioned hook, clear site cache, gracefully reload Gunicorn, and
+have the user hard-refresh once. Confirm the permission-aware v2 subtitle
+before sending smoke questions.
+
 After the two-user acceptance matrix passes:
 
 1. Capture current workflow and proxy backups with checksums.

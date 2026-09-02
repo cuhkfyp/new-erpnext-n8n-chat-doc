@@ -1017,3 +1017,11 @@ and publicly served widget checksums matched. Apache routing, guest rejection,
 forged-request safe failure, n8n/Redis health, and required container health
 passed. A logged-in normal-Desk hard-refresh greeting/data smoke remains before
 the old workflows are deactivated but retained for fourteen days.
+
+The first normal-Desk screenshot still showed the legacy subtitle because an
+already-open single-page Desk tab retained its pre-cutover JavaScript instance.
+The server file was already v2. The deployment helper now versions the widget
+URL in Frappe hooks, synchronizes it to runtimes, and preserves its existing
+asset backups/checksums. After cache clear and graceful Gunicorn reload, the
+effective hook and exact versioned public URL both resolved to the v2 loader.
+One user hard refresh remains necessary to destroy the old in-memory instance.
