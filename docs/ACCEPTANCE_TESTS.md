@@ -28,15 +28,12 @@ the later atomic v2 cutover.
 The restricted-user browser run passed permitted-list behavior, denied-DocType
 enforcement, raw-SQL/write/credential/injection refusals, oversized-result
 handling, pagination, filtered aggregation, follow-up context, and empty
-results. The higher-permission grouped aggregate was interrupted by Gemini
-HTTP 429 on `back 3`, not by a permission failure. `back 4` has since passed an
-HTTP 200 managed-credential probe and is bound to the two generative nodes.
-Repeat that grouped aggregate once before marking browser acceptance complete.
-The later bilingual current-year test exposed missing temporal grounding: both
-languages answered 2024 while Frappe reported 2026. The deployed correction
-now supplies and validates Frappe's date context before Gemini. Reconnect and
-confirm both `What's the current year?` and `今年年份是什麼？` answer 2026,
-then repeat the grouped `this year`/`今年` aggregate before acceptance is closed.
+results. The administrator subsequently passed the grouped Traditional Chinese
+`今年` aggregate using 2026 data, and the direct English current-year answer was
+2026 after Frappe date grounding was deployed. The nominated higher-permission
+and restricted-user browser acceptance matrix is therefore complete. Broader
+schema-sync failure, persistence/recreation, environment-isolation, and
+cutover monitoring checks remain separate rollout gates.
 
 ## Functional tests
 

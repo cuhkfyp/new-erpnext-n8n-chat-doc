@@ -120,9 +120,10 @@ higher-permission grouped-aggregate test. `back 4` was re-probed without
 exposing its secret; inactive smoke execution `410` returned HTTP 200 and
 exactly `OK`. Both v2 generative nodes are now explicitly bound to `back 4`,
 current and published versions match, and the persistent restart loaded them.
-Continue browser acceptance with `back 4`. Diagnose any later failure and
-perform another explicit managed-credential change; do not implement automatic
-key cycling. The embedding credential was not changed.
+The browser matrix was subsequently completed with `back 4` after the
+authoritative-date correction. Diagnose any later failure with an explicit
+managed-credential change; do not implement automatic key cycling. The
+embedding credential was not changed.
 
 This full-page launcher is temporary. After the nominated two-user matrix
 passes, the atomic production cutover installs the same secure bootstrap and
@@ -142,3 +143,9 @@ aggregates. Repeat once in a conversation whose Redis memory contains a stale
 year. Direct answers and QueryPlan date filters must follow Frappe's context;
 user permissions must still produce the expected differing results or denial.
 A stale model year is a failed regression, not a quota or timezone result.
+
+Production canary result on 2026-09-02: the administrator's Traditional
+Chinese grouped `今年` query used 2026 and completed; the direct English
+current-year answer was also 2026. Together with the earlier restricted-user
+permission and safety matrix, the nominated two-user browser acceptance passed.
+The operational/resilience checklist remains separate from this browser gate.

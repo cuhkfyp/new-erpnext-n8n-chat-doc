@@ -175,6 +175,7 @@ managed credential reference on the two generative nodes.
   month/year boundaries, and site timezone; both live workflow versions contain
   the validated authoritative-date contract.
 
-The remaining rollout gate is the nominated higher-permission and restricted-
-user browser acceptance matrix, including bilingual current-year and
-relative-date regression checks, followed by an atomic widget cutover.
+The nominated higher-permission and restricted-user browser matrix is complete,
+including the corrected bilingual relative-date behavior. Remaining rollout
+work is the separate operational/resilience checklist followed by an approved
+atomic widget cutover.

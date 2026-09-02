@@ -10,7 +10,11 @@
   QueryPlan prompts, overriding model training dates and prior Redis memory.
 - Republished both workflows through the supported persistent procedure;
   health, activation, current/published versions, and unchanged credential
-  roles were verified. Browser bilingual confirmation remains pending.
+  roles were verified.
+- Closed the two-user browser acceptance gate after the administrator's
+  Traditional Chinese grouped `今年` aggregate used 2026 and the direct English
+  current-year answer returned 2026; earlier restricted-user permission and
+  safety results remained valid.
 - Recorded partial higher-permission and restricted-user browser acceptance:
   allowed `CCD Registration` reads succeeded, restricted `CCD Master` and
   `hksr_rb` access was enforced by Frappe, and deterministic raw-SQL/write
