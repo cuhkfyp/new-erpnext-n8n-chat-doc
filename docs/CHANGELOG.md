@@ -14,9 +14,19 @@
   exposing its value; it returned HTTP 200 with the expected smoke reply.
 - Switched only the chat and QueryPlan generation nodes to `back 3` through
   n8n export/import/publish, leaving the embedding credential unchanged.
+- After `back 3` returned HTTP 429 during the higher-permission grouped
+  aggregate, re-probed `Gemini Generative v2 - back 4` through the inactive
+  managed-credential workflow. Execution `410` returned HTTP 200 and exactly
+  `OK`; no credential value was exported or displayed.
+- Explicitly switched only the chat and QueryPlan generation nodes to
+  `back 4`. Automatic key cycling remains disabled and the embedding credential
+  remains unchanged.
 - Reloaded n8n through the supplied persistent stop/start script. n8n and
   Redis remained healthy, all three v2 workflows activated, and the v2 webhook
   was registered. No workflow, credential, or SQLite volume was recreated.
+- Verified matching current/published workflow versions, HTTP 200 n8n health,
+  Redis `PONG`, and the static security/syntax contracts after the `back 4`
+  switch.
 - Updated the authoritative implementation, n8n operations, and UAT records.
 
 ## 2026-09-01

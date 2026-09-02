@@ -135,15 +135,18 @@ production Gemini generative credential reached its 20-request free-tier quota
 were checked without exposing their values: `back 2`, `back 3`, and `back 4`
 returned valid Gemini responses, while `back 1` was rate-limited/overloaded.
 `back 2` was initially bound to the chat and query-plan generation nodes. On
-2026-09-02 it also reached the 20-request daily quota during restricted-user
-acceptance. `back 3` was re-probed through the inactive managed-credential smoke
-workflow and returned HTTP 200 with the expected `OK`; the two generative nodes
-were explicitly switched to `back 3`, imported, published, and loaded with the
-supplied persistent n8n restart procedure. The embedding nodes remain on
-`Gemini Embedding v2 - production`. This remains a deliberate manual switch,
-not automatic key cycling. Both current workflows match their published
-versions and activated after stop/start. Audit exports and checksums are
-recorded in `ai-assistant-v2/IMPLEMENTATION_AND_OPERATIONS.md`.
+2026-09-02 it reached the 20-request daily quota during restricted-user
+acceptance. `back 3` was re-probed, returned HTTP 200, and was manually loaded;
+it later returned HTTP 429 during the higher-permission grouped-aggregate test.
+`back 4` was then re-probed through the inactive managed-credential smoke
+workflow. Execution `410` returned HTTP 200 with exactly `OK`, so only the
+query-plan and chat generative nodes were explicitly switched to `back 4`,
+imported, published, and loaded with the supplied persistent n8n restart
+procedure. The embedding nodes remain on `Gemini Embedding v2 - production`.
+This remains a deliberate manual switch, not automatic key cycling. Both
+current workflows match their published versions and activated after
+stop/start; n8n health and Redis returned HTTP 200 and `PONG`. Audit exports
+and checksums are recorded in `ai-assistant-v2/IMPLEMENTATION_AND_OPERATIONS.md`.
 
 The acceptance Page is temporary. After the nominated higher-permission and
 restricted-user tests pass, `deploy_shadow_backend.sh cutover-widget` installs

@@ -137,13 +137,16 @@ diagnostic workflow without exporting or printing their values.
 - `back 2` was initially selected for both chat generation and QueryPlan
   generation. After it reached the 20-request daily quota during restricted
   acceptance on 2026-09-02, `back 3` was re-probed successfully and explicitly
-  selected for those same two nodes.
+  selected for those same two nodes. When `back 3` later returned HTTP 429
+  during the higher-permission grouped aggregate, `back 4` was re-probed by
+  inactive smoke execution `410`, returned HTTP 200 with exactly `OK`, and was
+  explicitly selected for those same two nodes.
 - The separate production embedding credential was not changed.
 
 These were manual switches, not a rotating key pool. Both updated workflows
 were republished and loaded through the persistent n8n restart procedure.
-Current and published definitions matched, and the only 2026-09-02 workflow
-change was the managed credential reference on the two generative nodes.
+Current and published definitions matched, and each switch changed only the
+managed credential reference on the two generative nodes.
 
 ## Verification completed
 

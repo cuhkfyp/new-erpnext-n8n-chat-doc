@@ -872,9 +872,25 @@ Acceptance-gated work intentionally remains outside this implementation run:
   cycling. The supplied persistent stop/start procedure retained SQLite,
   credentials, Redis, mounts, and the pinned n8n version. Subsequent health was
   HTTP 200 and startup logs activated all three v2 workflows with the chat
-  webhook registered. Browser acceptance remains incomplete until the denied
-  RB request produces a clear user-facing refusal and the remaining matrix
-  below passes.
+  webhook registered.
+- Continued restricted-user acceptance passed permission-bypass injection
+  rejection, credential/password refusal, empty results, read-only/write
+  rejection, pagination, filtered aggregation, and conversational follow-up.
+  The higher-permission grouped aggregate then failed before query execution
+  because both generative nodes returned Gemini HTTP 429 on `back 3`; this was
+  a credential quota failure, not a permission or QueryPlan validation result.
+- `Gemini Generative v2 - back 4` was rechecked without exporting or displaying
+  its secret. Inactive smoke execution `410` returned HTTP 200 and exactly
+  `OK`. Only the QueryPlan generator and chat model were switched to the
+  managed `back 4` credential through n8n's supported export/import/publish
+  path. Embeddings remain on the separate production embedding credential and
+  automatic key cycling remains disabled. The persistent stop/start retained
+  SQLite, encrypted credentials, workflow history, Redis data, mounts, and the
+  pinned n8n version. After restart, n8n returned HTTP 200, Redis returned
+  `PONG`, all three v2 workflows activated, both changed workflows had matching
+  current/published versions, and the static contract suite passed. Browser
+  acceptance remains incomplete until the grouped aggregate is repeated
+  successfully and the remaining matrix below passes.
 
 Browser acceptance procedure:
 

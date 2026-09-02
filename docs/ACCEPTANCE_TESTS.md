@@ -23,6 +23,16 @@ that expose those values.
 The Page is temporary. The normal lower-right widget is restored only during
 the later atomic v2 cutover.
 
+## Status on 2026-09-02
+
+The restricted-user browser run passed permitted-list behavior, denied-DocType
+enforcement, raw-SQL/write/credential/injection refusals, oversized-result
+handling, pagination, filtered aggregation, follow-up context, and empty
+results. The higher-permission grouped aggregate was interrupted by Gemini
+HTTP 429 on `back 3`, not by a permission failure. `back 4` has since passed an
+HTTP 200 managed-credential probe and is bound to the two generative nodes.
+Repeat that grouped aggregate once before marking browser acceptance complete.
+
 ## Functional tests
 
 - greeting and ordinary follow-up conversation;

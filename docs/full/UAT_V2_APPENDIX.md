@@ -115,12 +115,14 @@ point-in-time HTTP 200 probe and was manually bound to both v2 generative
 nodes. During restricted-user acceptance on 2026-09-02, Frappe correctly
 rejected an `hksr_rb` plan with HTTP 403, then the chat model returned HTTP 429
 because `back 2` had reached the same 20-request daily quota. `back 3` was
-re-probed through the inactive diagnostic workflow and returned HTTP 200 with
-the expected `OK`. Both v2 generative nodes are now explicitly bound to
-`back 3`, current and published versions match, and the persistent restart
-loaded them. Continue browser acceptance with `back 3`. Diagnose any later
-failure and perform another explicit managed-credential change; do not
-implement automatic key cycling. The embedding credential was not changed.
+re-probed and manually loaded, then later returned HTTP 429 during the
+higher-permission grouped-aggregate test. `back 4` was re-probed without
+exposing its secret; inactive smoke execution `410` returned HTTP 200 and
+exactly `OK`. Both v2 generative nodes are now explicitly bound to `back 4`,
+current and published versions match, and the persistent restart loaded them.
+Continue browser acceptance with `back 4`. Diagnose any later failure and
+perform another explicit managed-credential change; do not implement automatic
+key cycling. The embedding credential was not changed.
 
 This full-page launcher is temporary. After the nominated two-user matrix
 passes, the atomic production cutover installs the same secure bootstrap and
