@@ -27,7 +27,18 @@ jq -e '
   | ($workflow.nodes | map(.name) | index("Validate Frappe Session Before Gemini") < index("Gate Unsafe Chat Request"))
   and ($workflow.nodes | map(.name) | index("Gate Unsafe Chat Request") < index("Permission-aware ERPNext Agent"))
   and ($workflow.nodes[] | select(.name == "Gate Unsafe Chat Request")
-      | .parameters.jsCode | contains("rawSql") and contains("sensitiveRequest") and contains("injectionAttempt"))
+      | .parameters.jsCode
+        | contains("rawSql")
+          and contains("sensitiveRequest")
+          and contains("injectionAttempt")
+          and contains("date_context")
+          and contains("current_year_start")
+          and contains("invalid authoritative date context"))
+  and ($workflow.nodes[] | select(.name == "Permission-aware ERPNext Agent")
+      | .parameters.options.systemMessage
+        | contains("AUTHORITATIVE ERPNext date context")
+          and contains("prior conversation memory")
+          and contains("今年"))
   and ($workflow.connections["Validate Frappe Session Before Gemini"].main[0][0].node == "Gate Unsafe Chat Request")
   and ($workflow.connections["Unsafe Chat Request?"].main[0][0].node == "Return Safe Rejection")
   and ($workflow.connections["Unsafe Chat Request?"].main[1][0].node == "Permission-aware ERPNext Agent")
@@ -38,11 +49,22 @@ jq -e '
   | ($workflow.nodes | map(.name) | index("Validate Session Before Retrieval") < index("Validate Natural-language Read Request"))
   and ($workflow.nodes | map(.name) | index("Validate Natural-language Read Request") < index("Gemini Query Embedding 768"))
   and ($workflow.nodes[] | select(.name == "Validate Natural-language Read Request")
-      | .parameters.jsCode | contains("rawSql") and contains("sensitiveRequest") and contains("injectionAttempt"))
+      | .parameters.jsCode
+        | contains("rawSql")
+          and contains("sensitiveRequest")
+          and contains("injectionAttempt")
+          and contains("date_context")
+          and contains("current_year_start")
+          and contains("invalid authoritative date context"))
   and ($workflow.connections["Validate Session Before Retrieval"].main[0][0].node == "Validate Natural-language Read Request")
   and ($workflow.connections["Validate Natural-language Read Request"].main[0][0].node == "Gemini Query Embedding 768")
   and ($workflow.nodes[] | select(.name == "Build QueryPlanV1 Prompt")
-      | .parameters.jsCode | contains("natural-language business names") and contains("Do not invent an unrelated DocType"))
+      | .parameters.jsCode
+        | contains("natural-language business names")
+          and contains("Do not invent an unrelated DocType")
+          and contains("AUTHORITATIVE ERPNext DATE CONTEXT")
+          and contains("Never guess the current date or year")
+          and contains("今年"))
   and ([$workflow.nodes[] | .parameters.jsCode? // ""] | all(contains("__NOT_ALLOWLISTED__") | not))
 ' \
   "${ROOT_DIR}/n8n/workflows/erpnext-permissioned-query-v2.json" >/dev/null
@@ -131,6 +153,12 @@ jq -e '
         | all($workflow.nodes[]; ((.parameters.headerParameters.parameters // []) | map(.name) | index($header)) == null)))
 ' "${ROOT_DIR}/n8n/workflows/erpnext-permissioned-query-v2.json" >/dev/null
 rg -q 'frappe_sid' "${ROOT_DIR}/hksr_overlay/hksr/ai_assistant/auth.py"
+rg -q '"date_context": _server_date_context()' \
+  "${ROOT_DIR}/hksr_overlay/hksr/ai_assistant/api.py"
+rg -q '^def _server_date_context()' \
+  "${ROOT_DIR}/hksr_overlay/hksr/ai_assistant/api.py"
+rg -q 'get_system_timezone' \
+  "${ROOT_DIR}/hksr_overlay/hksr/ai_assistant/api.py"
 ! rg -q 'frappe_sid|frappe\.session\.sid' \
   "${ROOT_DIR}/hksr_overlay/hksr/hksr/page/ai_assistant_v2_uat/ai_assistant_v2_uat.js" \
   "${ROOT_DIR}/hksr_overlay/hksr/public/js/n8n_chat.js" \

@@ -72,6 +72,14 @@ Deterministic gates reject raw SQL, write intent, credential or secret requests,
 and common injection shapes after session validation but before Gemini. A
 second equivalent gate exists in the query workflow before embedding.
 
+Frappe session validation also returns an authoritative server date context:
+current date/year, exact current-year and current-month ranges, and the site
+timezone. Both workflow gates validate it before Gemini. The Agent and
+QueryPlan prompts use it for direct date questions and multilingual relative
+terms such as `this year`, `今年`, and `本年`; it explicitly overrides model
+training dates and stale Redis conversation memory. The browser clock is never
+trusted and Gemini is never asked to guess the current year.
+
 Natural business labels, translations, and abbreviations may resolve to an
 allowlisted schema. They must never redirect a denied system-table request to a
 different allowlisted DocType.
@@ -163,6 +171,10 @@ managed credential reference on the two generative nodes.
   refusals without ERPNext data execution.
 - Schema synchronization completed successfully and repeat synchronization
   reported no drift.
+- Frappe's live date helper returned internally consistent current date/year,
+  month/year boundaries, and site timezone; both live workflow versions contain
+  the validated authoritative-date contract.
 
 The remaining rollout gate is the nominated higher-permission and restricted-
-user browser acceptance matrix followed by an atomic widget cutover.
+user browser acceptance matrix, including bilingual current-year and
+relative-date regression checks, followed by an atomic widget cutover.

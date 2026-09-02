@@ -928,3 +928,26 @@ credentials remain the operational credential source. Reusing an existing
 managed credential does not require recovering its value from disk. Every key
 that appears in the plaintext inventory remains rotation-required after v2
 acceptance.
+
+### 2026-09-02 authoritative server-date correction
+
+English and Traditional Chinese current-year questions both returned 2024
+while Frappe's clock and site timezone correctly reported 2026. This was
+missing prompt grounding, not a quota or timezone failure.
+
+Authenticated session validation now returns a Frappe-generated
+`date_context`: current date/year, exact current-year and current-month ranges,
+and site timezone. Both n8n paths validate it before Gemini. Chat and QueryPlan
+prompts use those values for direct date questions and relative terms such as
+`this year`, `今年`, and `本年`; the server context overrides model training
+dates and stale Redis memory. Browser-supplied dates and model guesses are not
+accepted.
+
+The backend and two workflow versions were deployed through the maintained
+persistent procedures. Static contracts, n8n HTTP health, Redis health,
+workflow activation, matching current/published versions, unchanged credential
+roles, and a clean v2-only audit were verified. Full workflow rollback exports
+remain restricted because untouched legacy workflow definitions may contain
+historical plaintext credentials. Browser closure still requires reconnecting
+and confirming both languages answer the Frappe current year before repeating
+the grouped relative-date aggregate.

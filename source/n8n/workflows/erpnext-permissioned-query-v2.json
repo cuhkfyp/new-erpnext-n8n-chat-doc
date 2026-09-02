@@ -5,12 +5,17 @@
     "active": false,
     "nodes": [
       {
-        "parameters": { "inputSource": "passthrough" },
+        "parameters": {
+          "inputSource": "passthrough"
+        },
         "id": "query-input",
         "name": "Permissioned Query Input",
         "type": "n8n-nodes-base.executeWorkflowTrigger",
         "typeVersion": 1.1,
-        "position": [-1100, 0]
+        "position": [
+          -1100,
+          0
+        ]
       },
       {
         "parameters": {
@@ -18,9 +23,18 @@
           "sendHeaders": true,
           "headerParameters": {
             "parameters": [
-              { "name": "Host", "value": "={{ $env.AI_FRAPPE_SITE_HOST }}" },
-              { "name": "X-AI-Assistant-Token", "value": "={{ $json.sessionToken }}" },
-              { "name": "X-AI-Assistant-Session", "value": "={{ $json.sessionId }}" }
+              {
+                "name": "Host",
+                "value": "={{ $env.AI_FRAPPE_SITE_HOST }}"
+              },
+              {
+                "name": "X-AI-Assistant-Token",
+                "value": "={{ $json.sessionToken }}"
+              },
+              {
+                "name": "X-AI-Assistant-Session",
+                "value": "={{ $json.sessionId }}"
+              }
             ]
           },
           "options": {}
@@ -29,17 +43,23 @@
         "name": "Validate Session Before Retrieval",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
-        "position": [-880, 0]
+        "position": [
+          -880,
+          0
+        ]
       },
       {
         "parameters": {
-          "jsCode": "const input = $('Permissioned Query Input').first().json;\nconst question = typeof input.query === 'string' ? input.query.trim() : '';\nif (!question) throw new Error('A natural-language read request is required.');\nconst rawSql = /```(?:sql|mysql|mariadb|postgresql)?/i.test(question) || /(?:^|[\\s;(])(?:select\\s+.+?\\s+from|insert\\s+into|update\\s+[^\\s;]+\\s+set|delete\\s+from|drop\\s+(?:table|database)|alter\\s+table|truncate\\s+table|create\\s+(?:table|database|index)|grant\\s+|revoke\\s+|merge\\s+into|exec(?:ute)?\\s+|call\\s+)/is.test(question) || /\\b(?:from|join)\\s+[`\\\"']?(?:tab[A-Za-z0-9_]+|__[A-Za-z0-9_]+)/i.test(question) || /\\b(?:union\\s+select|information_schema|pg_catalog|frappe\\.db\\.sql|cursor\\.execute)\\b/i.test(question);\nconst writeIntent = /^(?:please\\s+)?(?:delete|remove|erase|update|change|edit|modify|insert|create|add|write|set)\\b/i.test(question) || /^(?:請|请)?(?:刪除|删除|移除|更新|修改|新增|建立|创建|寫入|写入)/.test(question);\nconst sensitiveRequest = /\\b(?:password|passphrase|api[ -]?key|secret|access[ -]?token|session[ -]?id|credential|cookie)\\b/i.test(question) || /(?:密碼|密码|口令|金鑰|金钥|密鑰|密钥|秘鑰|秘钥|權杖|令牌|憑證|凭证)/.test(question);\nconst injectionAttempt = /\\b(?:ignore|disregard|override|bypass)\\b.{0,50}\\b(?:instruction|prompt|permission|security|policy|rule)\\b/is.test(question) || /\\b(?:jailbreak|act as (?:an? )?(?:administrator|admin|root)|developer mode)\\b/i.test(question);\nif (rawSql || writeIntent || sensitiveRequest || injectionAttempt) throw new Error('Only safe natural-language, read-only ERPNext questions are accepted.');\nreturn [{ json: { question } }];"
+          "jsCode": "const input = $('Permissioned Query Input').first().json;\nconst question = typeof input.query === 'string' ? input.query.trim() : '';\nif (!question) throw new Error('A natural-language read request is required.');\nconst dateContext = $('Validate Session Before Retrieval').first().json?.message?.date_context;\nconst currentDate = String(dateContext?.current_date || '');\nconst currentYear = Number(dateContext?.current_year);\nconst datePattern = /^\\d{4}-\\d{2}-\\d{2}$/;\nif (!datePattern.test(currentDate) || !Number.isInteger(currentYear) || currentYear !== Number(currentDate.slice(0, 4)) || dateContext?.current_year_start !== `${currentYear}-01-01` || dateContext?.current_year_end !== `${currentYear}-12-31` || !datePattern.test(String(dateContext?.current_month_start || '')) || !datePattern.test(String(dateContext?.current_month_end || '')) || typeof dateContext?.time_zone !== 'string' || !dateContext.time_zone || dateContext.time_zone.length > 64) throw new Error('Frappe returned an invalid authoritative date context.');\nconst rawSql = /```(?:sql|mysql|mariadb|postgresql)?/i.test(question) || /(?:^|[\\s;(])(?:select\\s+.+?\\s+from|insert\\s+into|update\\s+[^\\s;]+\\s+set|delete\\s+from|drop\\s+(?:table|database)|alter\\s+table|truncate\\s+table|create\\s+(?:table|database|index)|grant\\s+|revoke\\s+|merge\\s+into|exec(?:ute)?\\s+|call\\s+)/is.test(question) || /\\b(?:from|join)\\s+[`\\\"']?(?:tab[A-Za-z0-9_]+|__[A-Za-z0-9_]+)/i.test(question) || /\\b(?:union\\s+select|information_schema|pg_catalog|frappe\\.db\\.sql|cursor\\.execute)\\b/i.test(question);\nconst writeIntent = /^(?:please\\s+)?(?:delete|remove|erase|update|change|edit|modify|insert|create|add|write|set)\\b/i.test(question) || /^(?:請|请)?(?:刪除|删除|移除|更新|修改|新增|建立|创建|寫入|写入)/.test(question);\nconst sensitiveRequest = /\\b(?:password|passphrase|api[ -]?key|secret|access[ -]?token|session[ -]?id|credential|cookie)\\b/i.test(question) || /(?:密碼|密码|口令|金鑰|金钥|密鑰|密钥|秘鑰|秘钥|權杖|令牌|憑證|凭证)/.test(question);\nconst injectionAttempt = /\\b(?:ignore|disregard|override|bypass)\\b.{0,50}\\b(?:instruction|prompt|permission|security|policy|rule)\\b/is.test(question) || /\\b(?:jailbreak|act as (?:an? )?(?:administrator|admin|root)|developer mode)\\b/i.test(question);\nif (rawSql || writeIntent || sensitiveRequest || injectionAttempt) throw new Error('Only safe natural-language, read-only ERPNext questions are accepted.');\nreturn [{ json: { question, dateContext } }];"
         },
         "id": "validate-natural-language-read",
         "name": "Validate Natural-language Read Request",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
-        "position": [-650, 0]
+        "position": [
+          -650,
+          0
+        ]
       },
       {
         "parameters": {
@@ -57,9 +77,15 @@
         "name": "Gemini Query Embedding 768",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
-        "position": [-410, 0],
+        "position": [
+          -410,
+          0
+        ],
         "credentials": {
-          "googlePalmApi": { "id": "CONFIGURE_EMBEDDING_CREDENTIAL", "name": "Gemini Embedding v2 - ENV" }
+          "googlePalmApi": {
+            "id": "CONFIGURE_EMBEDDING_CREDENTIAL",
+            "name": "Gemini Embedding v2 - ENV"
+          }
         }
       },
       {
@@ -78,20 +104,29 @@
         "name": "Search Environment Schema",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
-        "position": [-170, 0],
+        "position": [
+          -170,
+          0
+        ],
         "credentials": {
-          "supabaseApi": { "id": "CONFIGURE_SUPABASE_CREDENTIAL", "name": "Supabase Schema RAG v2 - ENV" }
+          "supabaseApi": {
+            "id": "CONFIGURE_SUPABASE_CREDENTIAL",
+            "name": "Supabase Schema RAG v2 - ENV"
+          }
         }
       },
       {
         "parameters": {
-          "jsCode": "const question = $('Validate Natural-language Read Request').first().json.question;\nconst matches = $input.all().flatMap((item) => Array.isArray(item.json) ? item.json : [item.json]);\nif (!matches.length) throw new Error('No allowlisted schema metadata matched this question.');\nconst schema = matches.map((row) => row.content).filter(Boolean).join('\\n\\n---\\n\\n');\nconst contract = { version: '1', doctype: 'ONE allowlisted DocType', fields: ['fieldname'], filters: [{ field: 'fieldname', operator: '=', value: 'value' }], order_by: [{ field: 'fieldname', direction: 'asc' }], offset: 0, limit: 20, aggregates: [{ function: 'count|sum|average|minimum|maximum', field: '* or fieldname' }], group_by: ['fieldname'] };\nconst prompt = `Convert the user's ERPNext data question into QueryPlanV1 JSON. Return JSON only. Never return SQL, code, writes, joins, expressions, or more than one DocType. Use only DocTypes and fields present in the supplied schema. Resolve ordinary natural-language business names, translated labels, and abbreviations against the supplied DocType name, label, and description; for example, a business phrase may validly refer to an allowlisted DocType without using its exact technical name. Do not invent an unrelated DocType or field. Supported filter operators: =, !=, >, >=, <, <=, in, not in, like, not like, between, is. Keep limit at or below 100. For ordinary lists omit aggregates and group_by. For aggregates, fields may contain only group_by fields. Contract example: ${JSON.stringify(contract)}\\n\\nSCHEMA METADATA ONLY:\\n${schema}\\n\\nUSER QUESTION:\\n${question}`;\nreturn [{ json: { prompt } }];"
+          "jsCode": "const validated = $('Validate Natural-language Read Request').first().json;\nconst question = validated.question;\nconst dateContext = validated.dateContext;\nconst matches = $input.all().flatMap((item) => Array.isArray(item.json) ? item.json : [item.json]);\nif (!matches.length) throw new Error('No allowlisted schema metadata matched this question.');\nconst schema = matches.map((row) => row.content).filter(Boolean).join('\\n\\n---\\n\\n');\nconst contract = { version: '1', doctype: 'ONE allowlisted DocType', fields: ['fieldname'], filters: [{ field: 'fieldname', operator: '=', value: 'value' }], order_by: [{ field: 'fieldname', direction: 'asc' }], offset: 0, limit: 20, aggregates: [{ function: 'count|sum|average|minimum|maximum', field: '* or fieldname' }], group_by: ['fieldname'] };\nconst temporalContext = `Current ERPNext date: ${dateContext.current_date}\\nCurrent ERPNext year: ${dateContext.current_year}\\nCurrent-year range: ${dateContext.current_year_start} through ${dateContext.current_year_end}\\nCurrent-month range: ${dateContext.current_month_start} through ${dateContext.current_month_end}\\nERPNext time zone: ${dateContext.time_zone}`;\nconst prompt = `Convert the user's ERPNext data question into QueryPlanV1 JSON. Return JSON only. Never return SQL, code, writes, joins, expressions, or more than one DocType. Use only DocTypes and fields present in the supplied schema. Resolve ordinary natural-language business names, translated labels, and abbreviations against the supplied DocType name, label, and description; for example, a business phrase may validly refer to an allowlisted DocType without using its exact technical name. Do not invent an unrelated DocType or field. The AUTHORITATIVE ERPNext DATE CONTEXT below is server-supplied and overrides model knowledge, training dates, and prior conversation. Resolve relative time phrases in every language against it. In particular, this year, current year, 今年, and 本年 mean exactly ${dateContext.current_year_start} through ${dateContext.current_year_end}. Today means ${dateContext.current_date}. This month means exactly ${dateContext.current_month_start} through ${dateContext.current_month_end}. Never guess the current date or year. Use explicit date filters when the question is relative to time. Supported filter operators: =, !=, >, >=, <, <=, in, not in, like, not like, between, is. Keep limit at or below 100. For ordinary lists omit aggregates and group_by. For aggregates, fields may contain only group_by fields. Contract example: ${JSON.stringify(contract)}\\n\\nAUTHORITATIVE ERPNEXT DATE CONTEXT:\\n${temporalContext}\\n\\nSCHEMA METADATA ONLY:\\n${schema}\\n\\nUSER QUESTION:\\n${question}`;\nreturn [{ json: { prompt } }];"
         },
         "id": "build-plan-prompt",
         "name": "Build QueryPlanV1 Prompt",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
-        "position": [70, 0]
+        "position": [
+          70,
+          0
+        ]
       },
       {
         "parameters": {
@@ -109,9 +144,15 @@
         "name": "Gemini Generate QueryPlanV1",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
-        "position": [310, 0],
+        "position": [
+          310,
+          0
+        ],
         "credentials": {
-          "googlePalmApi": { "id": "CONFIGURE_GENERATIVE_CREDENTIAL", "name": "Gemini Generative v2 - ENV" }
+          "googlePalmApi": {
+            "id": "CONFIGURE_GENERATIVE_CREDENTIAL",
+            "name": "Gemini Generative v2 - ENV"
+          }
         }
       },
       {
@@ -122,7 +163,10 @@
         "name": "Parse Strict JSON Plan",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
-        "position": [550, 0]
+        "position": [
+          550,
+          0
+        ]
       },
       {
         "parameters": {
@@ -131,9 +175,18 @@
           "sendHeaders": true,
           "headerParameters": {
             "parameters": [
-              { "name": "Host", "value": "={{ $env.AI_FRAPPE_SITE_HOST }}" },
-              { "name": "X-AI-Assistant-Token", "value": "={{ $json.sessionToken }}" },
-              { "name": "X-AI-Assistant-Session", "value": "={{ $json.sessionId }}" }
+              {
+                "name": "Host",
+                "value": "={{ $env.AI_FRAPPE_SITE_HOST }}"
+              },
+              {
+                "name": "X-AI-Assistant-Token",
+                "value": "={{ $json.sessionToken }}"
+              },
+              {
+                "name": "X-AI-Assistant-Session",
+                "value": "={{ $json.sessionId }}"
+              }
             ]
           },
           "sendBody": true,
@@ -146,7 +199,10 @@
         "name": "Frappe Execute Permissioned Plan",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
-        "position": [790, 0]
+        "position": [
+          790,
+          0
+        ]
       },
       {
         "parameters": {
@@ -156,19 +212,112 @@
         "name": "Return Permissioned Result",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
-        "position": [1030, 0]
+        "position": [
+          1030,
+          0
+        ]
       }
     ],
     "connections": {
-      "Permissioned Query Input": { "main": [[{ "node": "Validate Session Before Retrieval", "type": "main", "index": 0 }]] },
-      "Validate Session Before Retrieval": { "main": [[{ "node": "Validate Natural-language Read Request", "type": "main", "index": 0 }]] },
-      "Validate Natural-language Read Request": { "main": [[{ "node": "Gemini Query Embedding 768", "type": "main", "index": 0 }]] },
-      "Gemini Query Embedding 768": { "main": [[{ "node": "Search Environment Schema", "type": "main", "index": 0 }]] },
-      "Search Environment Schema": { "main": [[{ "node": "Build QueryPlanV1 Prompt", "type": "main", "index": 0 }]] },
-      "Build QueryPlanV1 Prompt": { "main": [[{ "node": "Gemini Generate QueryPlanV1", "type": "main", "index": 0 }]] },
-      "Gemini Generate QueryPlanV1": { "main": [[{ "node": "Parse Strict JSON Plan", "type": "main", "index": 0 }]] },
-      "Parse Strict JSON Plan": { "main": [[{ "node": "Frappe Execute Permissioned Plan", "type": "main", "index": 0 }]] },
-      "Frappe Execute Permissioned Plan": { "main": [[{ "node": "Return Permissioned Result", "type": "main", "index": 0 }]] }
+      "Permissioned Query Input": {
+        "main": [
+          [
+            {
+              "node": "Validate Session Before Retrieval",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Validate Session Before Retrieval": {
+        "main": [
+          [
+            {
+              "node": "Validate Natural-language Read Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Validate Natural-language Read Request": {
+        "main": [
+          [
+            {
+              "node": "Gemini Query Embedding 768",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Gemini Query Embedding 768": {
+        "main": [
+          [
+            {
+              "node": "Search Environment Schema",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Search Environment Schema": {
+        "main": [
+          [
+            {
+              "node": "Build QueryPlanV1 Prompt",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build QueryPlanV1 Prompt": {
+        "main": [
+          [
+            {
+              "node": "Gemini Generate QueryPlanV1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Gemini Generate QueryPlanV1": {
+        "main": [
+          [
+            {
+              "node": "Parse Strict JSON Plan",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Strict JSON Plan": {
+        "main": [
+          [
+            {
+              "node": "Frappe Execute Permissioned Plan",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Frappe Execute Permissioned Plan": {
+        "main": [
+          [
+            {
+              "node": "Return Permissioned Result",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
     },
     "settings": {
       "executionOrder": "v1",
@@ -179,7 +328,9 @@
       "saveManualExecutions": false
     },
     "versionId": "11111111-1111-4111-8111-111111111112",
-    "meta": { "templateCredsSetupCompleted": false },
+    "meta": {
+      "templateCredsSetupCompleted": false
+    },
     "tags": []
   }
 ]

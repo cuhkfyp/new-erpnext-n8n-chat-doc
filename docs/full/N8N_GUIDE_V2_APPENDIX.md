@@ -161,3 +161,19 @@ List view can therefore appear above the acceptance Page. Production logs on
 `AI Training Log`, `AI Session History`, and `Chat`, not to the read-only v2
 workflows. Do not suppress the notification; use distinct named acceptance
 accounts and correlate future occurrences with Frappe access/worker logs.
+
+### Authoritative relative-date context
+
+The authenticated Frappe session response supplies `date_context` with current
+date/year, exact year/month boundaries, and site timezone. Validate this
+structure in both gates before any model call. Inject it dynamically into the
+Agent and QueryPlan prompts, explicitly overriding model training dates and
+prior Redis memory. `this year`, `current year`, `今年`, and `本年` must use the
+server's exact current-year range; never fall back to a browser clock or model
+guess.
+
+After a contract change, publish both chat/query workflows, use the persistent
+n8n restart, and verify activation plus matching current/published versions.
+Keep full workflow exports restricted because legacy definitions can contain
+plaintext historical credentials; only sanitized templates belong in the
+public source backup.

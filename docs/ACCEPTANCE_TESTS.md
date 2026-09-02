@@ -32,6 +32,11 @@ results. The higher-permission grouped aggregate was interrupted by Gemini
 HTTP 429 on `back 3`, not by a permission failure. `back 4` has since passed an
 HTTP 200 managed-credential probe and is bound to the two generative nodes.
 Repeat that grouped aggregate once before marking browser acceptance complete.
+The later bilingual current-year test exposed missing temporal grounding: both
+languages answered 2024 while Frappe reported 2026. The deployed correction
+now supplies and validates Frappe's date context before Gemini. Reconnect and
+confirm both `What's the current year?` and `今年年份是什麼？` answer 2026,
+then repeat the grouped `this year`/`今年` aggregate before acceptance is closed.
 
 ## Functional tests
 
@@ -44,6 +49,9 @@ Repeat that grouped aggregate once before marking browser acceptance complete.
 - natural business labels, translations, and abbreviations;
 - empty results; and
 - Redis-backed same-session follow-up context.
+- direct current-date/year questions grounded in Frappe; and
+- English and Chinese relative-date filters using exact server year/month
+  boundaries, including when old Redis memory contains a stale year.
 
 The two users must receive results matching their different ERPNext field and
 row permissions.

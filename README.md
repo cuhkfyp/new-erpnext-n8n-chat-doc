@@ -37,6 +37,9 @@ public.
   widget has not yet been replaced.
 - A separately managed Gemini generative credential was manually selected
   after a point-in-time health test. Automatic key cycling remains disabled.
+- Frappe now supplies an authoritative current date/year and exact date ranges
+  to both model paths, so English and Chinese relative-date questions do not
+  depend on Gemini's training date or prior chat memory.
 
 Production values must be supplied through Frappe and n8n credential stores,
 never committed to this repository.

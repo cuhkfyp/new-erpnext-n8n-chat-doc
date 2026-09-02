@@ -66,6 +66,21 @@ The sync sequence is:
 
 On any partial failure, preserve the last good index and report the failure.
 
+## Authoritative date context
+
+Relative-date behavior must be grounded in the authenticated Frappe server,
+not the browser clock or Gemini's training date. Session validation supplies
+the current date/year, exact year/month boundaries, and site timezone. Both
+chat and query gates validate those values before a model call; invalid or
+missing context is a hard workflow error.
+
+After any date-contract change, publish both query and chat workflows, restart
+through the persistent procedure, verify matching current/published versions,
+and test direct current-year plus English/Chinese relative-date questions.
+Keep complete n8n exports restricted because untouched legacy workflows may
+contain historical plaintext credentials. Public backups may include only
+sanitized templates and documentation.
+
 ## Restart and persistence
 
 Use the maintained restart script for the deployed environment. It performs

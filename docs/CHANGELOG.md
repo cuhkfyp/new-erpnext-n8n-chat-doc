@@ -2,6 +2,15 @@
 
 ## 2026-09-02
 
+- Diagnosed bilingual 2024 current-year answers as missing server temporal
+  context, not a quota, host-clock, or ERPNext-timezone failure.
+- Added a Frappe-generated authoritative date context with current date/year,
+  exact current-year/current-month boundaries, and site timezone.
+- Validated that context before both Gemini paths and injected it into chat and
+  QueryPlan prompts, overriding model training dates and prior Redis memory.
+- Republished both workflows through the supported persistent procedure;
+  health, activation, current/published versions, and unchanged credential
+  roles were verified. Browser bilingual confirmation remains pending.
 - Recorded partial higher-permission and restricted-user browser acceptance:
   allowed `CCD Registration` reads succeeded, restricted `CCD Master` and
   `hksr_rb` access was enforced by Frappe, and deterministic raw-SQL/write

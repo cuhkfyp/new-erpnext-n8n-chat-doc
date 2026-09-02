@@ -129,3 +129,16 @@ passes, the atomic production cutover installs the same secure bootstrap and
 opaque-token contract through the tracked `mode: "window"` loader, restoring
 the normal lower-right Desk presentation. Do not point that widget back to the
 legacy raw-SQL workflow.
+
+### Relative-date UAT regression
+
+Confirm authenticated Frappe validation returns a consistent date, year,
+year/month boundaries, and expected site timezone. Missing or inconsistent
+context must stop both workflow paths before Gemini.
+
+For both nominated users, reconnect and ask `What's the current year?` and
+`今年年份是什麼？`, then run equivalent permitted `this year` and `今年`
+aggregates. Repeat once in a conversation whose Redis memory contains a stale
+year. Direct answers and QueryPlan date filters must follow Frappe's context;
+user permissions must still produce the expected differing results or denial.
+A stale model year is a failed regression, not a quota or timezone result.

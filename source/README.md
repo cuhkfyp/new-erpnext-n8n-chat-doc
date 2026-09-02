@@ -11,7 +11,7 @@ and version UUIDs were also replaced with explicit examples.
 
 - `hksr_overlay/` — Frappe authentication, session validation, schema catalog,
   QueryPlanV1 validation/execution, synchronization, Settings DocTypes, secure
-  Desk loader, acceptance Page, and tests.
+  Desk loader, acceptance Page, authoritative server-date context, and tests.
 - `n8n/workflows/` — inactive generic templates for schema sync, permissioned
   query, and authenticated chat. Credential references remain `CONFIGURE_*`
   placeholders.

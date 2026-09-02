@@ -7,6 +7,7 @@ from typing import Any
 
 import frappe
 from frappe import _
+from frappe.utils import get_first_day, get_last_day, get_system_timezone, nowdate
 
 from hksr.ai_assistant.auth import (
 	browser_user_context,
@@ -43,6 +44,7 @@ def validate_session() -> dict[str, Any]:
 		"valid": True,
 		"session_id": context["chat_session_id"],
 		"site_id": context["site_id"],
+		"date_context": _server_date_context(),
 	}
 
 
@@ -82,6 +84,21 @@ def _enabled_settings() -> Any:
 	if not settings.enabled:
 		frappe.throw(_("The ERPNext AI assistant is disabled."), frappe.PermissionError)
 	return settings
+
+
+def _server_date_context() -> dict[str, Any]:
+	"""Return non-user-controlled calendar anchors for relative-date questions."""
+	current_date = nowdate()
+	current_year = int(current_date[:4])
+	return {
+		"current_date": current_date,
+		"current_year": current_year,
+		"current_year_start": f"{current_year:04d}-01-01",
+		"current_year_end": f"{current_year:04d}-12-31",
+		"current_month_start": get_first_day(current_date).isoformat(),
+		"current_month_end": get_last_day(current_date).isoformat(),
+		"time_zone": get_system_timezone(),
+	}
 
 
 def _validate_same_origin_webhook_path(value: Any) -> str:
