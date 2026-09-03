@@ -40,8 +40,10 @@ public.
   bounded retry for temporary provider failures. Aggregate plans normalize
   redundant selected fields to their group-by fields before final Frappe
   validation.
-- The vector index contains schema metadata only and uses 768-dimensional
-  Gemini embeddings. ERPNext record values are never embedded.
+- The vector index is isolated at `ai_assistant.erpnext_schema_chunks`, contains
+  schema metadata only, and uses 768-dimensional Gemini embeddings. The
+  unrelated `handbook_chunks` and `handbook_documents` tables are not used by
+  v2. ERPNext record values are never embedded.
 - The normal lower-right Desk widget now uses the secure v2 Frappe-bootstrap
   loader. The isolated acceptance Page is temporarily retained for diagnosis.
 - The nominated higher-permission and restricted-user browser matrix has
@@ -55,9 +57,11 @@ public.
   pre-existing Frappe restart-policy blockers. The host must not be rebooted
   for acceptance until the persistent Frappe Compose policy is corrected and
   the checkpoint reports zero failures.
-- Server-side cutover checks passed. A normal logged-in Desk hard-refresh
-  greeting/data smoke remains before the legacy workflows are deactivated and
-  retained for fourteen days.
+- Server-side cutover checks and the normal lower-right Desk smoke passed for
+  both nominated users: the higher-permission query succeeded, the restricted
+  user's allowed query succeeded, and the restricted dataset remained denied.
+  Legacy workflow deactivation and the fourteen-day retention window remain a
+  controlled follow-up.
 - A separately managed Gemini generative credential was manually selected
   after a point-in-time health test. Automatic key cycling remains disabled.
 - Frappe now supplies an authoritative current date/year and exact date ranges

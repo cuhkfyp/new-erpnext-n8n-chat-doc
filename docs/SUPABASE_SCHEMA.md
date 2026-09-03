@@ -3,31 +3,16 @@
 ## Correct pgvector type
 
 The initial migration failed when it declared the column as
-`extensions.vector(768)`. In this Supabase project, the `vector` type is
-available on the database search path and is not exposed as
-`extensions.vector`.
+`extensions.vector(768)`. In this Supabase project, the extension is installed
+in `public`, so the complete migration declares `public.vector(768)` and uses
+the matching `public.vector_cosine_ops` operator class.
 
-Use:
-
-```sql
-create extension if not exists vector;
-
-create schema if not exists ai_assistant;
-
-create table if not exists ai_assistant.schema_chunks (
-    site_key text not null,
-    doctype_name text not null,
-    chunk_key text not null,
-    content_hash text not null,
-    schema_text text not null,
-    embedding vector(768) not null,
-    updated_at timestamptz not null default now(),
-    primary key (site_key, doctype_name, chunk_key)
-);
-```
-
-The corrected environment migration completed successfully with no returned
-rows.
+Run `source/supabase/detect_vector_schema.sql` first. For a result of `public`,
+run the complete
+`source/supabase/001_erpnext_schema_rag_v2.public-vector.sql`; do not construct
+a shortened table manually because the workflow also depends on its protected
+RPCs, constraints, grants, hash/model metadata, and index. The corrected
+environment migration completed successfully with no returned rows.
 
 ## Index and RPC requirements
 
@@ -42,3 +27,30 @@ rows.
 
 Each environment requires a separate Supabase project and separately managed
 credential.
+
+## Which tables v2 uses
+
+The v2 assistant does not use `handbook_chunks` or `handbook_documents`.
+Those names belong to a separate or legacy index and may legitimately be
+empty. Reusing them would violate the requirement to isolate the ERPNext
+schema index from colleague data.
+
+The actual table is `ai_assistant.erpnext_schema_chunks`, and similarity
+retrieval uses `public.match_erpnext_schema_v2`. It stores only schema metadata,
+hashes, and embeddings. ERPNext record values are queried live through Frappe
+under the authenticated user's permissions.
+
+Use this read-only SQL Editor query to confirm the index without displaying
+embeddings or content:
+
+```sql
+select
+  site_id,
+  count(*) as chunk_count,
+  count(distinct doctype) as doctype_count,
+  min(updated_at) as oldest_chunk_update,
+  max(updated_at) as newest_chunk_update
+from ai_assistant.erpnext_schema_chunks
+group by site_id
+order by site_id;
+```

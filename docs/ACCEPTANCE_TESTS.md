@@ -79,6 +79,12 @@ A normal natural-language question about an allowlisted business dataset must
 still proceed. The deterministic raw-SQL gate must not block every permitted
 query.
 
+Production follow-up on 2026-09-03: the normal lower-right Desk widget passed
+with both nominated users after the planner and quota corrections. The
+higher-permission grouped aggregate and the restricted user's allowed count
+succeeded, while the same restricted user remained denied from the separate
+restricted dataset.
+
 ## Schema synchronization tests
 
 - Adding an allowlisted field embeds only new or changed chunks.
@@ -88,6 +94,11 @@ query.
 - Gemini, Supabase, proxy, quota, and partial-batch failures preserve the last
   good index and appear in Frappe status.
 - Development, UAT, and production namespaces and credentials cannot cross.
+
+Do not inspect `handbook_chunks` or `handbook_documents` as evidence for v2
+schema synchronization. The v2 index is the isolated
+`ai_assistant.erpnext_schema_chunks` table; those handbook tables are outside
+this implementation and may legitimately be empty.
 
 ## Persistence tests
 

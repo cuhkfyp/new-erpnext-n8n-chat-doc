@@ -255,6 +255,28 @@ matched after the persistent restart, permitted counts succeeded, and the
 restricted DocType remained denied. Exact workflow IDs, checksums, paths, and
 record counts remain only in the restricted operational record.
 
+### Finding the v2 schema RAG in Supabase
+
+The v2 workflows use `ai_assistant.erpnext_schema_chunks` and the bounded
+`public.match_erpnext_schema_v2` RPC. They never read or write
+`handbook_chunks` or `handbook_documents`; empty handbook tables do not
+indicate a v2 sync failure.
+
+```sql
+select
+  site_id,
+  count(*) as chunk_count,
+  count(distinct doctype) as doctype_count,
+  min(updated_at) as oldest_chunk_update,
+  max(updated_at) as newest_chunk_update
+from ai_assistant.erpnext_schema_chunks
+group by site_id
+order by site_id;
+```
+
+This health query reveals no embedding vectors or ERPNext record values.
+Record values are never indexed and are retrieved live through Frappe.
+
 ### Aggregate-plan normalization and quota classification
 
 If Frappe reports that an aggregate query selected fields outside its

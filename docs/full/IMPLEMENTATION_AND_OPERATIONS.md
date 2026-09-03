@@ -1084,6 +1084,31 @@ counts, and the restricted DocType denial were reverified. Raw workflow
 exports, exact IDs, private paths, and production counts remain in restricted
 operational evidence and are not included in this public backup.
 
+### Lower-right widget smoke and schema-RAG location
+
+The post-correction normal-Desk smoke passed for both nominated users. The
+higher-permission grouped aggregate succeeded, the restricted user's allowed
+count succeeded, and the restricted dataset remained denied by Frappe.
+
+The v2 RAG index is not stored in `handbook_chunks` or
+`handbook_documents`. It is isolated at
+`ai_assistant.erpnext_schema_chunks`, with similarity retrieval through
+`public.match_erpnext_schema_v2`. Only schema metadata, hashes, and
+768-dimensional embeddings are stored. ERPNext records remain live in Frappe
+and are read under the authenticated user's permissions.
+
+```sql
+select
+  site_id,
+  count(*) as chunk_count,
+  count(distinct doctype) as doctype_count,
+  min(updated_at) as oldest_chunk_update,
+  max(updated_at) as newest_chunk_update
+from ai_assistant.erpnext_schema_chunks
+group by site_id
+order by site_id;
+```
+
 ### Aggregate-plan normalization and quota response
 
 A later grouped aggregate produced structurally valid JSON but included its

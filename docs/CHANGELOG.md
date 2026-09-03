@@ -127,6 +127,19 @@
   switch.
 - Updated the authoritative implementation, n8n operations, and UAT records.
 
+## 2026-09-03 schema-index clarification and final Desk smoke
+
+- Confirmed the normal lower-right Desk widget after the aggregate parser and
+  managed generative-credential corrections: the nominated higher-permission
+  query and restricted user's allowed query passed, while the restricted
+  dataset remained denied by Frappe.
+- Documented that v2 uses the isolated
+  `ai_assistant.erpnext_schema_chunks` table and
+  `public.match_erpnext_schema_v2` RPC. The unrelated `handbook_chunks` and
+  `handbook_documents` tables are never read or written by v2.
+- Added a read-only SQL Editor health query for per-site chunk and DocType
+  counts without displaying embeddings or schema content.
+
 ## 2026-09-01
 
 - Confirmed the legacy outage was caused by reverse-proxy routing to Frappe

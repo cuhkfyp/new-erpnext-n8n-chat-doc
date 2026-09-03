@@ -237,3 +237,10 @@ workflow is never invoked in that case. After an explicitly managed fallback
 credential passes an inactive smoke test and is selected, repeat one permitted
 query for each nominated user plus the denied-DocType check. Automatic key
 cycling remains out of scope.
+
+Production follow-up on 2026-09-03: the normal lower-right widget passed the
+three-part smoke after the aggregate parser and managed generative-credential
+corrections. The higher-permission grouped aggregate succeeded, the restricted
+user's allowed count succeeded, and Frappe continued to deny the restricted
+dataset. The live schema sync was also successful. Its v2 index is
+`ai_assistant.erpnext_schema_chunks`; the handbook tables are unrelated.
