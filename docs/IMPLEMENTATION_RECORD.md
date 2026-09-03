@@ -51,6 +51,14 @@ One request can address one DocType and supports:
 - count, sum, average, minimum, and maximum; and
 - one validated group-by field.
 
+The query workflow also has a narrow deterministic path for unambiguous simple
+counts. It constructs only a fixed `count(*)` plan for an exact retrieved
+DocType or configured environment alias, then sends that plan to the same
+Frappe permission endpoint. All other questions use Gemini with an explicit
+structured-output schema, strict plan-shape validation, and bounded transient
+retries. Neither path can bypass the allowlist or the current user's record and
+field permissions.
+
 The default result limit is 20 and the hard maximum is 100. Raw SQL, writes,
 joins, arbitrary expressions, system-table redirection, invalid fields,
 unsupported operators, and oversized limits are rejected.

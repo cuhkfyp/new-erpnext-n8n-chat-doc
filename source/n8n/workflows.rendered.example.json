@@ -982,7 +982,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const validated = $('Validate Natural-language Read Request').first().json;\nconst question = validated.question;\nconst dateContext = validated.dateContext;\nconst matches = $input.all().flatMap((item) => Array.isArray(item.json) ? item.json : [item.json]);\nif (!matches.length) throw new Error('No allowlisted schema metadata matched this question.');\nconst schema = matches.map((row) => row.content).filter(Boolean).join('\\n\\n---\\n\\n');\nconst contract = { version: '1', doctype: 'ONE allowlisted DocType', fields: ['fieldname'], filters: [{ field: 'fieldname', operator: '=', value: 'value' }], order_by: [{ field: 'fieldname', direction: 'asc' }], offset: 0, limit: 20, aggregates: [{ function: 'count|sum|average|minimum|maximum', field: '* or fieldname' }], group_by: ['fieldname'] };\nconst temporalContext = `Current ERPNext date: ${dateContext.current_date}\\nCurrent ERPNext year: ${dateContext.current_year}\\nCurrent-year range: ${dateContext.current_year_start} through ${dateContext.current_year_end}\\nCurrent-month range: ${dateContext.current_month_start} through ${dateContext.current_month_end}\\nERPNext time zone: ${dateContext.time_zone}`;\nconst prompt = `Convert the user's ERPNext data question into QueryPlanV1 JSON. Return JSON only. Never return SQL, code, writes, joins, expressions, or more than one DocType. Use only DocTypes and fields present in the supplied schema. Resolve ordinary natural-language business names, translated labels, and abbreviations against the supplied DocType name, label, and description; for example, a business phrase may validly refer to an allowlisted DocType without using its exact technical name. Do not invent an unrelated DocType or field. The AUTHORITATIVE ERPNext DATE CONTEXT below is server-supplied and overrides model knowledge, training dates, and prior conversation. Resolve relative time phrases in every language against it. In particular, this year, current year, 今年, and 本年 mean exactly ${dateContext.current_year_start} through ${dateContext.current_year_end}. Today means ${dateContext.current_date}. This month means exactly ${dateContext.current_month_start} through ${dateContext.current_month_end}. Never guess the current date or year. Use explicit date filters when the question is relative to time. Supported filter operators: =, !=, >, >=, <, <=, in, not in, like, not like, between, is. Keep limit at or below 100. For ordinary lists omit aggregates and group_by. For aggregates, fields may contain only group_by fields. Contract example: ${JSON.stringify(contract)}\\n\\nAUTHORITATIVE ERPNEXT DATE CONTEXT:\\n${temporalContext}\\n\\nSCHEMA METADATA ONLY:\\n${schema}\\n\\nUSER QUESTION:\\n${question}`;\nreturn [{ json: { prompt } }];"
+          "jsCode": "const validated = $('Validate Natural-language Read Request').first().json;\nconst input = $('Permissioned Query Input').first().json;\nconst question = validated.question;\nconst dateContext = validated.dateContext;\nconst matches = $input.all().flatMap((item) => Array.isArray(item.json) ? item.json : [item.json]);\nif (!matches.length) throw new Error('No allowlisted schema metadata matched this question.');\nconst contents = matches.map((row) => row.content).filter((value) => typeof value === 'string' && value.trim());\nconst schema = contents.join('\\n\\n---\\n\\n');\nconst doctypes = [...new Set(contents.flatMap((content) => [...content.matchAll(/^ERPNext DocType(?: fields)?:\\s*(.+)$/gmi)].map((match) => match[1].trim())).filter(Boolean))];\nconst normalizedQuestion = question.toLocaleLowerCase('en').replace(/[\\s_]+/g, ' ').trim();\nconst countIntent = /\\b(?:how many|count|number of|total(?: number)?(?: of)?)\\b/i.test(question) || /(?:多少|幾多|几多|總共有|总共有|共有|總數|总数|紀錄數|記錄數|记录数|筆數|笔数)/.test(question);\nlet deterministicDoctype = doctypes.find((doctype) => normalizedQuestion.includes(doctype.toLocaleLowerCase('en'))) || '';\nif (!deterministicDoctype && normalizedQuestion.includes('example client database') && doctypes.includes('Example Master')) deterministicDoctype = 'Example Master';\nif (countIntent && deterministicDoctype) {\n  const plan = { version: '1', doctype: deterministicDoctype, fields: [], filters: [], order_by: [], offset: 0, limit: 20, aggregates: [{ function: 'count', field: '*' }], group_by: [] };\n  return [{ json: { route: 'deterministic', queryPlan: JSON.stringify(plan), sessionToken: input.sessionToken, sessionId: input.sessionId } }];\n}\nconst contract = { version: '1', doctype: 'ONE allowlisted DocType', fields: ['fieldname'], filters: [{ field: 'fieldname', operator: '=', value: 'value' }], order_by: [{ field: 'fieldname', direction: 'asc' }], offset: 0, limit: 20, aggregates: [{ function: 'count|sum|average|minimum|maximum', field: '* or fieldname' }], group_by: ['fieldname'] };\nconst temporalContext = `Current ERPNext date: ${dateContext.current_date}\\nCurrent ERPNext year: ${dateContext.current_year}\\nCurrent-year range: ${dateContext.current_year_start} through ${dateContext.current_year_end}\\nCurrent-month range: ${dateContext.current_month_start} through ${dateContext.current_month_end}\\nERPNext time zone: ${dateContext.time_zone}`;\nconst prompt = `Convert the user's ERPNext data question into QueryPlanV1 JSON. Return JSON only. Always include every top-level key in the contract; use empty arrays when a section is unused. Never return SQL, code, writes, joins, expressions, or more than one DocType. Use only DocTypes and fields present in the supplied schema. Resolve ordinary natural-language business names, translated labels, and abbreviations against the supplied DocType name, label, and description; for example, a business phrase may validly refer to an allowlisted DocType without using its exact technical name. In this deployment, the business phrase example client database means the allowlisted Example Master DocType when Example Master is present in the supplied schema. This alias does not grant access and must never be used to redirect a denied system-table or credential request. Do not invent an unrelated DocType or field. The AUTHORITATIVE ERPNext DATE CONTEXT below is server-supplied and overrides model knowledge, training dates, and prior conversation. Resolve relative time phrases in every language against it. In particular, this year, current year, 今年, and 本年 mean exactly ${dateContext.current_year_start} through ${dateContext.current_year_end}. Today means ${dateContext.current_date}. This month means exactly ${dateContext.current_month_start} through ${dateContext.current_month_end}. Never guess the current date or year. Use explicit date filters when the question is relative to time. Supported filter operators: =, !=, >, >=, <, <=, in, not in, like, not like, between, is. Keep limit at or below 100. For ordinary lists use empty aggregates and group_by arrays. For aggregates, fields may contain only group_by fields. Contract example: ${JSON.stringify(contract)}\\n\\nAUTHORITATIVE ERPNEXT DATE CONTEXT:\\n${temporalContext}\\n\\nSCHEMA METADATA ONLY:\\n${schema}\\n\\nUSER QUESTION:\\n${question}`;\nreturn [{ json: { route: 'gemini', prompt } }];"
         },
         "id": "build-plan-prompt",
         "name": "Build QueryPlanV1 Prompt",
@@ -995,6 +995,39 @@
       },
       {
         "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "deterministic-query-plan-condition",
+                "leftValue": "={{ $json.route }}",
+                "rightValue": "deterministic",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "route-deterministic-query-plan",
+        "name": "Deterministic Simple Count?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          310,
+          0
+        ]
+      },
+      {
+        "parameters": {
           "method": "POST",
           "url": "={{ 'https://generativelanguage.googleapis.com/v1beta/models/' + $env.AI_GENERATIVE_MODEL + ':generateContent' }}",
           "authentication": "predefinedCredentialType",
@@ -1002,7 +1035,7 @@
           "sendBody": true,
           "contentType": "raw",
           "rawContentType": "application/json",
-          "body": "={{ JSON.stringify({ contents: [{ parts: [{ text: $json.prompt }] }], generationConfig: { temperature: 0, responseMimeType: 'application/json' } }) }}",
+          "body": "={{ JSON.stringify({ contents: [{ parts: [{ text: $json.prompt }] }], generationConfig: { temperature: 0, responseMimeType: 'application/json', responseSchema: { type: 'OBJECT', properties: { version: { type: 'STRING', enum: ['1'] }, doctype: { type: 'STRING' }, fields: { type: 'ARRAY', items: { type: 'STRING' } }, filters: { type: 'ARRAY', items: { type: 'OBJECT', properties: { field: { type: 'STRING' }, operator: { type: 'STRING', enum: ['=', '!=', '>', '>=', '<', '<=', 'in', 'not in', 'like', 'not like', 'between', 'is'] }, value: { anyOf: [{ type: 'STRING' }, { type: 'NUMBER' }, { type: 'INTEGER' }, { type: 'BOOLEAN' }, { type: 'NULL' }, { type: 'ARRAY', items: { anyOf: [{ type: 'STRING' }, { type: 'NUMBER' }, { type: 'INTEGER' }, { type: 'BOOLEAN' }, { type: 'NULL' }] } }] } }, required: ['field', 'operator', 'value'], propertyOrdering: ['field', 'operator', 'value'] } }, order_by: { type: 'ARRAY', items: { type: 'OBJECT', properties: { field: { type: 'STRING' }, direction: { type: 'STRING', enum: ['asc', 'desc'] } }, required: ['field', 'direction'], propertyOrdering: ['field', 'direction'] } }, offset: { type: 'INTEGER', minimum: 0, maximum: 10000 }, limit: { type: 'INTEGER', minimum: 1, maximum: 100 }, aggregates: { type: 'ARRAY', items: { type: 'OBJECT', properties: { function: { type: 'STRING', enum: ['count', 'sum', 'average', 'minimum', 'maximum'] }, field: { type: 'STRING' } }, required: ['function', 'field'], propertyOrdering: ['function', 'field'] } }, group_by: { type: 'ARRAY', items: { type: 'STRING' } } }, required: ['version', 'doctype', 'fields', 'filters', 'order_by', 'offset', 'limit', 'aggregates', 'group_by'], propertyOrdering: ['version', 'doctype', 'fields', 'filters', 'order_by', 'offset', 'limit', 'aggregates', 'group_by'] } } }) }}",
           "options": {}
         },
         "id": "generate-query-plan",
@@ -1010,9 +1043,12 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
-          310,
-          0
+          550,
+          120
         ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 3000,
         "credentials": {
           "googlePalmApi": {
             "id": "CONFIGURE_GENERATIVE_CREDENTIAL",
@@ -1022,15 +1058,15 @@
       },
       {
         "parameters": {
-          "jsCode": "const text = $json?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || '';\nconst cleaned = text.trim().replace(/^```(?:json)?\\s*/i, '').replace(/\\s*```$/, '');\nlet plan;\ntry { plan = JSON.parse(cleaned); } catch { throw new Error('Gemini did not return valid QueryPlanV1 JSON.'); }\nif (!plan || Array.isArray(plan) || typeof plan !== 'object') throw new Error('QueryPlanV1 must be a JSON object.');\nconst input = $('Permissioned Query Input').first().json;\nreturn [{ json: { queryPlan: JSON.stringify(plan), sessionToken: input.sessionToken, sessionId: input.sessionId } }];"
+          "jsCode": "const text = $json?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || '';\nconst cleaned = text.trim().replace(/^```(?:json)?\\s*/i, '').replace(/\\s*```$/, '');\nlet plan;\ntry { plan = JSON.parse(cleaned); } catch { throw new Error('Gemini did not return valid QueryPlanV1 JSON.'); }\nif (!plan || Array.isArray(plan) || typeof plan !== 'object') throw new Error('QueryPlanV1 must be a JSON object.');\nconst allowedKeys = new Set(['version', 'doctype', 'fields', 'filters', 'order_by', 'offset', 'limit', 'aggregates', 'group_by']);\nif (Object.keys(plan).some((key) => !allowedKeys.has(key))) throw new Error('Gemini returned unsupported QueryPlanV1 keys.');\nif (plan.version !== '1' || typeof plan.doctype !== 'string' || !plan.doctype.trim()) throw new Error('Gemini returned an incomplete QueryPlanV1 object.');\nfor (const key of ['fields', 'filters', 'order_by', 'aggregates', 'group_by']) if (!Array.isArray(plan[key])) throw new Error(`Gemini returned invalid QueryPlanV1 ${key}.`);\nif (!Number.isInteger(plan.offset) || !Number.isInteger(plan.limit)) throw new Error('Gemini returned invalid QueryPlanV1 pagination.');\nconst input = $('Permissioned Query Input').first().json;\nreturn [{ json: { queryPlan: JSON.stringify(plan), sessionToken: input.sessionToken, sessionId: input.sessionId } }];"
         },
         "id": "parse-query-plan",
         "name": "Parse Strict JSON Plan",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          550,
-          0
+          790,
+          120
         ]
       },
       {
@@ -1065,7 +1101,7 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
-          790,
+          1030,
           0
         ]
       },
@@ -1078,7 +1114,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          1030,
+          1270,
           0
         ]
       }
@@ -1141,6 +1177,24 @@
       },
       "Build QueryPlanV1 Prompt": {
         "main": [
+          [
+            {
+              "node": "Deterministic Simple Count?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Deterministic Simple Count?": {
+        "main": [
+          [
+            {
+              "node": "Frappe Execute Permissioned Plan",
+              "type": "main",
+              "index": 0
+            }
+          ],
           [
             {
               "node": "Gemini Generate QueryPlanV1",

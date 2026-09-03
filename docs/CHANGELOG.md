@@ -1,5 +1,23 @@
 # Change log
 
+## 2026-09-03
+
+- Diagnosed two independent lower-right-widget failures: a syntactically valid
+  but empty Gemini query-plan object and a temporary Gemini HTTP 503 high-demand
+  response. A restricted user's denial for a separate DocType remained the
+  expected Frappe permission result.
+- Added a deterministic, no-filter `count(*)` QueryPlanV1 branch for an exact
+  DocType found in retrieved schema metadata or an explicitly configured
+  environment alias. The plan still executes only through authenticated
+  Frappe permission enforcement.
+- Added Gemini structured-output schema requirements, strict local plan-shape
+  validation, and three attempts with 3-second waits for transient planner
+  failures.
+- Republished only the permissioned-query workflow through the supported n8n
+  procedure, retaining all managed credential roles and persistent data.
+- Verified administrator-level and restricted-user permitted counts directly
+  through Frappe and confirmed that the restricted DocType remains denied.
+
 ## 2026-09-02
 
 - Added authenticated, user-scoped visible chat history. Frappe derives an
@@ -70,8 +88,8 @@
   current-year answer returned 2026; earlier restricted-user permission and
   safety results remained valid.
 - Recorded partial higher-permission and restricted-user browser acceptance:
-  allowed `CCD Registration` reads succeeded, restricted `CCD Master` and
-  `hksr_rb` access was enforced by Frappe, and deterministic raw-SQL/write
+  allowed example-registration reads succeeded, restricted example-master and
+  example-metrics access was enforced by Frappe, and deterministic raw-SQL/write
   refusals remained in place.
 - Diagnosed the restricted RB browser's generic error as two sequential,
   independent results: the expected Frappe HTTP 403 permission rejection,

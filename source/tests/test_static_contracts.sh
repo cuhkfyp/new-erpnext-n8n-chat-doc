@@ -61,10 +61,24 @@ jq -e '
   and ($workflow.nodes[] | select(.name == "Build QueryPlanV1 Prompt")
       | .parameters.jsCode
         | contains("natural-language business names")
+          and contains("example client database")
+          and contains("deterministic")
           and contains("Do not invent an unrelated DocType")
           and contains("AUTHORITATIVE ERPNext DATE CONTEXT")
           and contains("Never guess the current date or year")
           and contains("今年"))
+  and ($workflow.connections["Build QueryPlanV1 Prompt"].main[0][0].node == "Deterministic Simple Count?")
+  and ($workflow.connections["Deterministic Simple Count?"].main[0][0].node == "Frappe Execute Permissioned Plan")
+  and ($workflow.connections["Deterministic Simple Count?"].main[1][0].node == "Gemini Generate QueryPlanV1")
+  and ($workflow.nodes[] | select(.name == "Gemini Generate QueryPlanV1")
+      | .retryOnFail == true
+        and .maxTries == 3
+        and .waitBetweenTries == 3000
+        and (.parameters.body | contains("responseSchema")))
+  and ($workflow.nodes[] | select(.name == "Parse Strict JSON Plan")
+      | .parameters.jsCode
+        | contains("incomplete QueryPlanV1")
+          and contains("unsupported QueryPlanV1 keys"))
   and ([$workflow.nodes[] | .parameters.jsCode? // ""] | all(contains("__NOT_ALLOWLISTED__") | not))
 ' \
   "${ROOT_DIR}/n8n/workflows/erpnext-permissioned-query-v2.json" >/dev/null

@@ -858,9 +858,9 @@ Acceptance-gated work intentionally remains outside this implementation run:
   health was `ok`, all three v2 workflows activated, Redis returned `PONG`, all
   Frappe containers were up, and Apache configuration was valid.
 - On 2026-09-02, partial higher-permission and restricted-user browser
-  acceptance confirmed permitted `CCD Registration` reads, restricted
-  `CCD Master` and `hksr_rb` enforcement, and deterministic raw-SQL/write
-  refusals. The restricted RB request reached Frappe and was correctly rejected
+  acceptance confirmed permitted example-registration reads, restricted
+  example-master and example-metrics enforcement, and deterministic raw-SQL/write
+  refusals. The restricted request reached Frappe and was correctly rejected
   with HTTP 403. The enclosing chat execution then failed while composing the
   denial because the active `back 2` generative credential returned Gemini
   HTTP 429 for its 20-request free-tier daily quota; the generic browser error
@@ -1053,3 +1053,63 @@ ambiguous pre-upgrade list must be left to expire instead of assigning it to a
 user speculatively. Verification requires guest history HTTP 403, empty direct
 n8n trigger history, same-user F5/second-browser restoration, and cross-user
 isolation.
+
+### 2026-09-03 query-planner resilience correction
+
+Visible history continued to work across F5. Two independent planner failures
+then appeared: Gemini once returned an empty `{}` query plan, and another
+request received a temporary Gemini HTTP 503 high-demand response. A restricted
+user's refusal for a separate DocType remained the expected Frappe permission
+result.
+
+The permissioned-query workflow now handles only unambiguous simple counts
+deterministically after schema retrieval. It accepts an exact DocType name from
+the retrieved schema or a configured environment alias and constructs a fixed,
+no-filter `count(*)` QueryPlanV1. The plan still executes through authenticated
+Frappe under the real ERPNext user, so this path grants no DocType, field, or
+row access and cannot run SQL or writes.
+
+Other questions continue through Gemini. The planner request now supplies an
+explicit structured-output schema requiring every QueryPlanV1 member, the local
+parser rejects incomplete and unknown members, and transient planner failures
+are retried no more than three times with 3-second waits. This follows Google's
+structured-output guidance while retaining application validation:
+<https://ai.google.dev/gemini-api/docs/structured-output>.
+
+Only the permissioned-query workflow was exported, updated, imported,
+published, and loaded through the persistent n8n stop/start procedure. Managed
+generative, embedding, and Supabase credential roles did not change. Static
+contracts, n8n/Redis health, permitted administrator-level and restricted-user
+counts, and the restricted DocType denial were reverified. Raw workflow
+exports, exact IDs, private paths, and production counts remain in restricted
+operational evidence and are not included in this public backup.
+
+### 2026-09-03 query-planner resilience correction
+
+Visible history continued to work across F5. Two independent planner failures
+then appeared: Gemini once returned an empty `{}` query plan, and another
+request received a temporary Gemini HTTP 503 high-demand response. A restricted
+user's refusal for a separate DocType remained the expected Frappe permission
+result.
+
+The permissioned-query workflow now handles only unambiguous simple counts
+deterministically after schema retrieval. It accepts an exact DocType name from
+the retrieved schema or a configured environment alias and constructs a fixed,
+no-filter `count(*)` QueryPlanV1. The plan still executes through authenticated
+Frappe under the real ERPNext user, so this path grants no DocType, field, or
+row access and cannot run SQL or writes.
+
+Other questions continue through Gemini. The planner request now supplies an
+explicit structured-output schema requiring every QueryPlanV1 member, the local
+parser rejects incomplete and unknown members, and transient planner failures
+are retried no more than three times with 3-second waits. This follows Google's
+structured-output guidance while retaining application validation:
+<https://ai.google.dev/gemini-api/docs/structured-output>.
+
+Only the permissioned-query workflow was exported, updated, imported,
+published, and loaded through the persistent n8n stop/start procedure. Managed
+generative, embedding, and Supabase credential roles did not change. Static
+contracts, n8n/Redis health, permitted administrator-level and restricted-user
+counts, and the restricted DocType denial were reverified. Raw workflow
+exports, exact IDs, private paths, and production counts remain in restricted
+operational evidence and are not included in this public backup.

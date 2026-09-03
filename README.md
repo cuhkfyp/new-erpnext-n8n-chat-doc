@@ -34,6 +34,10 @@ public.
   after F5 or in another browser, while different users remain isolated.
 - Record queries execute through Frappe's permission-aware list API. Model-
   generated SQL, joins, writes, and arbitrary expressions are rejected.
+- Unambiguous simple counts can use a fixed deterministic QueryPlanV1 after
+  schema retrieval; all such plans still pass through Frappe permissions.
+  Other plans use Gemini structured output, strict local validation, and a
+  bounded retry for temporary provider failures.
 - The vector index contains schema metadata only and uses 768-dimensional
   Gemini embeddings. ERPNext record values are never embedded.
 - The normal lower-right Desk widget now uses the secure v2 Frappe-bootstrap

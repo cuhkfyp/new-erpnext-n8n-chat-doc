@@ -233,3 +233,45 @@ The first production capture is blocked because nine long-lived Frappe
 containers use `on-failure`, and no enabled Frappe boot unit was detected.
 Persist a reboot-capable policy in the Frappe Compose source and capture again
 before the maintenance window.
+
+### Query-planner resilience and deterministic counts
+
+After schema retrieval, an exact retrieved DocType name or explicit
+environment alias may be used to construct a fixed, no-filter `count(*)`
+QueryPlanV1 for an unambiguous simple count question. Every such plan must end
+at authenticated Frappe permission enforcement. Never use this path for raw
+SQL, writes, credential requests, injection attempts, a denied system table,
+or a merely similar DocType.
+
+Send all other questions to Gemini with JSON structured output requiring all
+QueryPlanV1 members. Reject missing/unknown members locally before Frappe, and
+retry temporary planner failures no more than three times with 3-second waits.
+Do not query record values from Supabase, return cached ERPNext rows, or rotate
+credentials automatically as a fallback.
+
+The 2026-09-03 production correction was limited to the permissioned-query
+workflow. Credential roles were retained, current and published versions
+matched after the persistent restart, permitted counts succeeded, and the
+restricted DocType remained denied. Exact workflow IDs, checksums, paths, and
+record counts remain only in the restricted operational record.
+
+### Query-planner resilience and deterministic counts
+
+After schema retrieval, an exact retrieved DocType name or explicit
+environment alias may be used to construct a fixed, no-filter `count(*)`
+QueryPlanV1 for an unambiguous simple count question. Every such plan must end
+at authenticated Frappe permission enforcement. Never use this path for raw
+SQL, writes, credential requests, injection attempts, a denied system table,
+or a merely similar DocType.
+
+Send all other questions to Gemini with JSON structured output requiring all
+QueryPlanV1 members. Reject missing/unknown members locally before Frappe, and
+retry temporary planner failures no more than three times with 3-second waits.
+Do not query record values from Supabase, return cached ERPNext rows, or rotate
+credentials automatically as a fallback.
+
+The 2026-09-03 production correction was limited to the permissioned-query
+workflow. Credential roles were retained, current and published versions
+matched after the persistent restart, permitted counts succeeded, and the
+restricted DocType remained denied. Exact workflow IDs, checksums, paths, and
+record counts remain only in the restricted operational record.

@@ -131,7 +131,7 @@ Distinguish safety/permission failures from quota failures during UAT. On
 The separately managed `Gemini Generative v2 - back 2` credential passed a
 point-in-time HTTP 200 probe and was manually bound to both v2 generative
 nodes. During restricted-user acceptance on 2026-09-02, Frappe correctly
-rejected an `hksr_rb` plan with HTTP 403, then the chat model returned HTTP 429
+rejected an example restricted plan with HTTP 403, then the chat model returned HTTP 429
 because `back 2` had reached the same 20-request daily quota. `back 3` was
 re-probed and manually loaded, then later returned HTTP 429 during the
 higher-permission grouped-aggregate test. `back 4` was re-probed without

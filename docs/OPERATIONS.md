@@ -81,6 +81,21 @@ Keep complete n8n exports restricted because untouched legacy workflows may
 contain historical plaintext credentials. Public backups may include only
 sanitized templates and documentation.
 
+## Query-planner resilience
+
+An unambiguous simple count may bypass Gemini planning only after schema
+retrieval identifies an exact allowed DocType name or an explicit
+environment-specific alias. The generated object must be a fixed, no-filter
+`count(*)` QueryPlanV1 and must still call authenticated Frappe. Never use this
+branch to answer raw SQL, writes, credential requests, injection attempts, or a
+merely similar DocType.
+
+For all other questions, require Gemini JSON structured output for every
+QueryPlanV1 member and reject missing or unknown members before calling
+Frappe. A temporary planner failure may be retried at most three times with
+3-second waits. Do not rotate credentials automatically and do not return
+cached ERPNext record values as a fallback.
+
 ## Restart and persistence
 
 Use the maintained restart script for the deployed environment. It performs
