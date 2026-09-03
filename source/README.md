@@ -24,6 +24,13 @@ and version UUIDs were also replaced with explicit examples.
   persistent `vm.overcommit_memory = 1` host prerequisite.
 - `operations/reboot_persistence_check.sh` — read-only pre/post Ubuntu reboot
   checkpoint and verification helper; it never starts or changes services.
+- `operations/frappe_runtime_integrity.sh` — all-installed-app hook/version
+  parity audit, fail-closed verification, recoverable worker synchronization,
+  and backend-only cache warming.
+- `operations/erpnext_restart.safe.sh` — dependency-ordered ERPNext stop/start
+  with parity gates before workers may rebuild shared Frappe hooks.
+- `operations/install_frappe_runtime_guard.sh` — idempotent, backup-first host
+  installer for the preceding two guards; it does not restart or deploy apps.
 - `n8n/production.env.example` — sanitized non-secret production runtime
   example.
 - `n8n/workflows.rendered.example.json` — inactive rendered example with

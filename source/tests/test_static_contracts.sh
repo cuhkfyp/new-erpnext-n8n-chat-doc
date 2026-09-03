@@ -216,6 +216,29 @@ rg -q 'active_v2_count' "${ROOT_DIR}/operations/reboot_persistence_check.sh"
 rg -q 'this script still does not initiate the reboot' "${ROOT_DIR}/operations/reboot_persistence_check.sh"
 ! rg -q 'docker (container )?(start|restart|update)|systemctl (start|restart|reboot)|(^|[[:space:]])reboot([[:space:]]|$)' \
   "${ROOT_DIR}/operations/reboot_persistence_check.sh"
+bash -n "${ROOT_DIR}/operations/frappe_runtime_integrity.sh"
+bash -n "${ROOT_DIR}/operations/erpnext_restart.safe.sh"
+bash -n "${ROOT_DIR}/operations/install_frappe_runtime_guard.sh"
+rg -q 'audit\|verify\|sync\|warm-cache' \
+  "${ROOT_DIR}/operations/frappe_runtime_integrity.sh"
+rg -q 'sheets\.boot\.extend_bootinfo' \
+  "${ROOT_DIR}/operations/frappe_runtime_integrity.sh"
+rg -q 'drive\.api\.product\.after_request' \
+  "${ROOT_DIR}/operations/frappe_runtime_integrity.sh"
+rg -Fq 'Refusing to rebuild app_hooks while' \
+  "${ROOT_DIR}/operations/frappe_runtime_integrity.sh"
+rg -Fq 'Checking Frappe application and cached-hook integrity before restart' \
+  "${ROOT_DIR}/operations/erpnext_restart.safe.sh"
+rg -Fq 'Starting database and Redis first' \
+  "${ROOT_DIR}/operations/erpnext_restart.safe.sh"
+rg -Fq 'rebuilding app_hooks before any worker can write the cache' \
+  "${ROOT_DIR}/operations/erpnext_restart.safe.sh"
+rg -Fq 'background runtimes remain stopped until integrity is verified' \
+  "${ROOT_DIR}/operations/erpnext_restart.safe.sh"
+rg -Fq 'ERPNEXT_PUBLIC_HOST' \
+  "${ROOT_DIR}/operations/erpnext_restart.safe.sh"
+rg -Fq 'No Frappe application source, database, Redis data, or container was changed' \
+  "${ROOT_DIR}/operations/install_frappe_runtime_guard.sh"
 rg -Fq -- "--exclude='.runtime-workflow-stage/'" "${ROOT_DIR}/install_operations_source.sh"
 rg -Fq -- "--exclude='*.rdb'" "${ROOT_DIR}/install_operations_source.sh"
 rg -q 'frappe_docker-queue-short-1 frappe_docker-queue-long-1 frappe_docker-scheduler-1' \
@@ -225,5 +248,7 @@ rg -Fq 'mktemp -d "${SCRIPT_DIR}/.runtime-stage.XXXXXX"' \
 rg -Fq 'docker cp -a "${runtime_stage}/." "${runtime_container}:${RUNTIME_PACKAGE}/"' \
   "${ROOT_DIR}/deploy_shadow_backend.sh"
 rg -q 'python -m compileall -q' "${ROOT_DIR}/deploy_shadow_backend.sh"
+rg -Fq 'RUNTIME_INTEGRITY_SCRIPT=' "${ROOT_DIR}/deploy_shadow_backend.sh"
+[[ "$(rg -c '"\$\{RUNTIME_INTEGRITY_SCRIPT\}" verify' "${ROOT_DIR}/deploy_shadow_backend.sh")" -eq 2 ]]
 
 echo "Static security and syntax contracts passed."

@@ -67,6 +67,10 @@ public.
 - Frappe now supplies an authoritative current date/year and exact date ranges
   to both model paths, so English and Chinese relative-date questions do not
   depend on Gemini's training date or prior chat memory.
+- Frappe backend/scheduler/queue application drift has been repaired. A tracked
+  all-app parity guard, dependency-ordered restart, recoverable synchronizer,
+  and AI-deployment pre/post checks now prevent stale workers from rebuilding
+  obsolete shared Redis hooks during controlled maintenance.
 
 Production values must be supplied through Frappe and n8n credential stores,
 never committed to this repository.

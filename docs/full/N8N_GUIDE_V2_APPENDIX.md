@@ -255,6 +255,33 @@ matched after the persistent restart, permitted counts succeeded, and the
 restricted DocType remained denied. Exact workflow IDs, checksums, paths, and
 record counts remain only in the restricted operational record.
 
+### Frappe runtime parity before AI deployment or ERPNext restart
+
+Frappe application code can differ between container writable layers even when
+all services display the same image tag. Before an AI deployment, cache clear,
+or ERPNext stop/start, run the installed `frappe_runtime_integrity.sh verify`.
+It compares hook checksums and declared application versions for every app in
+the shared registry, then rejects known obsolete cached hooks. The AI deployer
+performs this check before and after Hksr synchronization.
+
+Do not bypass a parity failure or use Redis clearing as the only repair: an
+older worker can recreate the bad cache. In a controlled window, the `sync`
+mode preserves drifted worker packages, copies only the matching Python package
+from the live backend, stops background runtimes, rebuilds hooks, and restarts
+the workers. The safe ERPNext restart starts database, Redis, and backend before
+warming hooks, then starts scheduler/queues. It does not stop n8n or its Redis.
+
+The tracked idempotent installer is
+`operations/install_frappe_runtime_guard.sh`. Public deployments should supply
+their own `ERPNEXT_VOLUME_ROOT` and `ERPNEXT_PUBLIC_HOST`. The installer does
+not deploy application source, migrate databases, clear chat history, or
+restart containers.
+
+Compose recreation loses unmounted container-layer changes. Restore persistent
+custom apps after a recreation and keep scheduler/queues stopped until parity
+verification passes. Keep the host reboot/recreation drill in an explicit
+maintenance window.
+
 ### Finding the v2 schema RAG in Supabase
 
 The v2 workflows use `ai_assistant.erpnext_schema_chunks` and the bounded

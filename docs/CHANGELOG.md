@@ -140,6 +140,26 @@
 - Added a read-only SQL Editor health query for per-site chunk and DocType
   counts without displaying embeddings or schema content.
 
+## 2026-09-03 Frappe runtime-integrity repair
+
+- Diagnosed the outage as application-version drift between the Frappe backend,
+  scheduler, and queue writable layers plus obsolete shared Redis hooks; the
+  common Docker image tag had hidden the in-container differences.
+- Preserved every replaced worker package, synchronized only drifted Python
+  packages from the live backend, stopped background runtimes, and rebuilt the
+  hook cache from the canonical backend.
+- Added an all-installed-app audit/verify/sync/cache guard and an idempotent,
+  backup-first host installer.
+- Replaced the old ERPNext restart flow with a parity-gated,
+  dependency-ordered procedure that starts database/Redis/backend and warms
+  hooks before starting scheduler/queues. Normal restart no longer deploys or
+  migrates the unrelated portal application.
+- Added all-app parity checks before and after Hksr AI deployment.
+- Passed a complete ERPNext stop/start: all nine services returned, ping and
+  workers were healthy, hooks/versions matched, obsolete cache entries did not
+  return, AI endpoints remained fail-closed, and n8n Redis data remained intact.
+- Added regression contracts and public-safe source/operations documentation.
+
 ## 2026-09-01
 
 - Confirmed the legacy outage was caused by reverse-proxy routing to Frappe

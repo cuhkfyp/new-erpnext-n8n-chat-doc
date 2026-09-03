@@ -6,6 +6,7 @@ OVERLAY_ROOT="${SCRIPT_DIR}/hksr_overlay/hksr"
 APP_REPOSITORY="${HKSR_APP_REPOSITORY:-/srv/erpnext/apps/hksr}"
 APP_PACKAGE="${APP_REPOSITORY}/hksr"
 BACKUP_ROOT="${AI_BACKUP_ROOT:-/var/backups/erpnext-ai-assistant}"
+RUNTIME_INTEGRITY_SCRIPT="${FRAPPE_RUNTIME_INTEGRITY_SCRIPT:-/srv/erpnext/frappe_runtime_integrity.sh}"
 MODE="${1:-backend-only}"
 RUNTIME_PACKAGE="/home/frappe/frappe-bench/apps/hksr/hksr"
 RUNTIME_CONTAINERS="${HKSR_RUNTIME_CONTAINERS:-frappe_docker-queue-short-1 frappe_docker-queue-long-1 frappe_docker-scheduler-1}"
@@ -19,6 +20,20 @@ END_MARKER="# END HKSR ERPNext AI Assistant v2 hooks"
 if [[ "${MODE}" != "backend-only" && "${MODE}" != "cutover-widget" ]]; then
   echo "Usage: $0 [backend-only|cutover-widget]" >&2
   exit 2
+fi
+
+if [[ -x "${RUNTIME_INTEGRITY_SCRIPT}" ]]; then
+  all_python_runtimes_running=1
+  for runtime_container in ${RUNTIME_CONTAINERS}; do
+    if [[ "$(docker inspect -f '{{.State.Running}}' "${runtime_container}" 2>/dev/null || true)" != "true" ]]; then
+      all_python_runtimes_running=0
+    fi
+  done
+  if (( all_python_runtimes_running )); then
+    "${RUNTIME_INTEGRITY_SCRIPT}" verify
+  else
+    echo "Warning: runtime parity preflight skipped because a background runtime is stopped." >&2
+  fi
 fi
 if [[ ! -f "${APP_PACKAGE}/hooks.py" || ! -d "${APP_REPOSITORY}/.git" ]]; then
   echo "Hksr repository not found at ${APP_REPOSITORY}" >&2
@@ -180,6 +195,19 @@ else
 fi
 
 python3 -m compileall -q "${APP_PACKAGE}/ai_assistant" "${APP_PACKAGE}/hksr/doctype"
+if [[ -x "${RUNTIME_INTEGRITY_SCRIPT}" ]]; then
+  all_python_runtimes_running=1
+  for runtime_container in ${RUNTIME_CONTAINERS}; do
+    if [[ "$(docker inspect -f '{{.State.Running}}' "${runtime_container}" 2>/dev/null || true)" != "true" ]]; then
+      all_python_runtimes_running=0
+    fi
+  done
+  if (( all_python_runtimes_running )); then
+    "${RUNTIME_INTEGRITY_SCRIPT}" verify
+  else
+    echo "Warning: run ${RUNTIME_INTEGRITY_SCRIPT} verify after all runtimes are started." >&2
+  fi
+fi
 echo "Pre-change backup: ${backup_dir}"
 if [[ "${MODE}" == "cutover-widget" ]]; then
   echo "Next: clear the Frappe site cache and verify the public widget asset and exact Apache route; no container recreation is required."

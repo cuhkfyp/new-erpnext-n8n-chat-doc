@@ -1109,6 +1109,54 @@ group by site_id
 order by site_id;
 ```
 
+### 2026-09-03 Frappe runtime-parity and cached-hook incident repair
+
+The temporary ERPNext outage combined different writable-layer copies of
+installed applications in backend/scheduler/queue containers with shared Redis
+hook entries produced by older code. The affected runtimes had the same Docker
+image tag, which did not prove that their in-container application code was
+identical. Redis contained obsolete Drive and Sheets hook paths. Clearing the
+cache restored service temporarily but did not correct the application split.
+
+A normal Docker stop/start preserves each writable layer and did not itself
+create the mismatch. The old restart helper did not check parity and allowed a
+stale worker to populate an empty shared cache. The filesystem evidence cannot
+attribute the original drift to one historical deployment. The live backend
+was selected as the canonical serving runtime; every changed worker package was
+preserved privately before synchronization, and no colleague repository source
+was overwritten.
+
+The public-safe operational controls added by this repair are:
+
+- `operations/frappe_runtime_integrity.sh`, with read-only `audit`/`verify`,
+  recoverable `sync`, and worker-stopped `warm-cache` modes covering every app
+  in the shared `sites/apps.txt`;
+- `operations/erpnext_restart.safe.sh`, which refuses drift, stops consumers
+  first, starts database/Redis/backend first, rebuilds hooks before workers,
+  and fails with background runtimes stopped rather than exposing stale hooks;
+- `operations/install_frappe_runtime_guard.sh`, an idempotent installer that
+  changes only the host guard/restart helpers, backs up prior files, performs
+  syntax/live checks, and does not deploy apps, migrate data, or restart; and
+- AI deployment pre/post checks using the same all-application guard, so an
+  Hksr update cannot conceal or proceed across unrelated Frappe drift.
+
+The full dependency-ordered stop/start passed after synchronization: all nine
+ERPNext services returned, Frappe ping was HTTP 200, two workers were online,
+recent runtime logs had no new hook/import error, worker checksums and declared
+versions matched the backend, and the shared cache contained neither obsolete
+path. AI bootstrap/history rejected unauthenticated calls with HTTP 403 and AI
+API/sync imports succeeded in their required runtimes. n8n and its separate
+AOF-backed Redis remained running and retained its keys. Static security,
+syntax, and restart-order contracts also passed.
+
+Private package/configuration rollback paths, production hostnames, exact
+timestamps, and operational identifiers remain only in the restricted source
+runbook. A Compose recreation is still different from stop/start because
+unmounted container-layer application changes are lost. Restore persistent
+custom apps after recreation and keep scheduler/queues stopped until the parity
+guard passes. The host reboot/recreation drill remains an explicit deferred
+maintenance-window test.
+
 ### Aggregate-plan normalization and quota response
 
 A later grouped aggregate produced structurally valid JSON but included its

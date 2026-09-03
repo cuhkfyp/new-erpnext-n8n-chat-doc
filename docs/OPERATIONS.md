@@ -98,6 +98,31 @@ cached ERPNext record values as a fallback.
 
 ## Restart and persistence
 
+### Frappe/ERPNext runtime integrity
+
+The ERPNext backend, scheduler, and queue containers have separate writable
+application layers. A shared image tag is not sufficient evidence that their
+Frappe hooks or application versions match. Run
+`source/operations/frappe_runtime_integrity.sh verify` before an application
+deployment, Frappe cache rebuild, or ERPNext restart.
+
+If drift is reported, use `sync` only in a controlled window. It preserves each
+replaced worker package before copying the canonical backend package, stops the
+background runtimes, rebuilds hooks from the backend, then verifies the result.
+Do not treat Redis clearing alone as a repair.
+
+Install the guarded restart with
+`source/operations/install_frappe_runtime_guard.sh`; set
+`ERPNEXT_VOLUME_ROOT` and `ERPNEXT_PUBLIC_HOST` for the target environment. The
+installer is idempotent and does not modify Frappe source, databases, Redis, or
+running containers. The installed restart helper verifies parity, orders
+database/Redis/backend before hook warming and workers, and leaves background
+runtimes stopped if integrity cannot be established.
+
+This controls stop/start but does not persist unmounted code through Compose
+recreation. Restore persistent custom apps after recreation and do not start
+scheduler/queues until verification passes.
+
 Use the maintained restart script for the deployed environment. It performs
 container stop/start and retains:
 

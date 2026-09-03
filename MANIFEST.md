@@ -2,7 +2,7 @@
 
 Audit date: 2026-09-03
 
-The source project contained 42 non-generated files and 14 generated Python
+The source project contained 45 non-generated files and 14 generated Python
 bytecode files. Every non-generated file has a representation in this public
 backup. Files marked **sanitized** preserve their implementation or document
 content while replacing environment-specific operational metadata.
@@ -46,6 +46,9 @@ content while replacing environment-specific operational metadata.
 | `n8n/workflows/erpnext-permissioned-query-v2.json` | Same path below `source/` | Sanitized workflow/version UUIDs |
 | `n8n/workflows/erpnext-schema-sync-v2.json` | Same path below `source/` | Sanitized workflow/version UUIDs |
 | `operations/reboot_persistence_check.sh` | `source/operations/reboot_persistence_check.sh` | Sanitized defaults |
+| `operations/frappe_runtime_integrity.sh` | `source/operations/frappe_runtime_integrity.sh` | Included |
+| `operations/erpnext_restart.safe.sh` | `source/operations/erpnext_restart.safe.sh` | Sanitized host/path defaults |
+| `operations/install_frappe_runtime_guard.sh` | `source/operations/install_frappe_runtime_guard.sh` | Sanitized path defaults |
 | `supabase/001_erpnext_schema_rag_v2.public-vector.sql` | Same path below `source/` | Included |
 | `supabase/001_erpnext_schema_rag_v2.sql` | Same path below `source/` | Included |
 | `supabase/detect_vector_schema.sql` | Same path below `source/` | Included |
