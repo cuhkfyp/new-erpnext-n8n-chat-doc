@@ -78,7 +78,9 @@ jq -e '
   and ($workflow.nodes[] | select(.name == "Parse Strict JSON Plan")
       | .parameters.jsCode
         | contains("incomplete QueryPlanV1")
-          and contains("unsupported QueryPlanV1 keys"))
+          and contains("unsupported QueryPlanV1 keys")
+          and contains("plan.aggregates.length")
+          and contains("plan.fields = [...plan.group_by]"))
   and ([$workflow.nodes[] | .parameters.jsCode? // ""] | all(contains("__NOT_ALLOWLISTED__") | not))
 ' \
   "${ROOT_DIR}/n8n/workflows/erpnext-permissioned-query-v2.json" >/dev/null

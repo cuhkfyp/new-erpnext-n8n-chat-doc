@@ -255,6 +255,21 @@ matched after the persistent restart, permitted counts succeeded, and the
 restricted DocType remained denied. Exact workflow IDs, checksums, paths, and
 record counts remain only in the restricted operational record.
 
+### Aggregate-plan normalization and quota classification
+
+If Frappe reports that an aggregate query selected fields outside its
+group-by list, inspect the plan before changing roles or the allowlist. The
+parser may safely replace aggregate-plan `fields` with an exact copy of
+`group_by`; it must not rewrite any meaningful query, authentication, or
+permission component. Frappe remains responsible for validating and executing
+the resulting plan for the actual user.
+
+Classify a chat-model HTTP 429 separately because it occurs before the query
+tool and is not a permission decision. Probe a separately managed credential
+through an inactive workflow without exporting its value, then switch both
+generative nodes explicitly if approved. Do not change embedding credentials
+or introduce automatic key cycling.
+
 ### Query-planner resilience and deterministic counts
 
 After schema retrieval, an exact retrieved DocType name or explicit

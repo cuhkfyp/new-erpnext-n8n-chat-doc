@@ -37,7 +37,9 @@ public.
 - Unambiguous simple counts can use a fixed deterministic QueryPlanV1 after
   schema retrieval; all such plans still pass through Frappe permissions.
   Other plans use Gemini structured output, strict local validation, and a
-  bounded retry for temporary provider failures.
+  bounded retry for temporary provider failures. Aggregate plans normalize
+  redundant selected fields to their group-by fields before final Frappe
+  validation.
 - The vector index contains schema metadata only and uses 768-dimensional
   Gemini embeddings. ERPNext record values are never embedded.
 - The normal lower-right Desk widget now uses the secure v2 Frappe-bootstrap

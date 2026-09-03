@@ -255,3 +255,16 @@ widget URL in Frappe hooks as well as backing up/checking both asset copies.
 After site-cache clear and graceful Gunicorn reload, the effective hook and
 versioned public response both resolved to v2. Users must hard-refresh once to
 destroy a widget that was already running before cutover.
+
+On 2026-09-03, a later grouped aggregate produced a valid JSON shape but
+selected an aggregate source field outside its group-by fields. Frappe's final
+validation correctly rejected it. The query parser now normalizes only the
+redundant aggregate-plan `fields` member to `group_by`, leaving every meaningful
+query and permission component for Frappe to validate.
+
+Restricted-user retries during the same window failed separately with Gemini
+HTTP 429 in the chat model before the query tool ran. A separately managed
+fallback passed an inactive, value-free smoke test and was manually selected
+for both generative nodes. The workflows were republished and loaded through
+the persistent restart procedure; embeddings and automatic-rotation policy
+were unchanged.

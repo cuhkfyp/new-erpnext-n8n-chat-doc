@@ -1084,6 +1084,26 @@ counts, and the restricted DocType denial were reverified. Raw workflow
 exports, exact IDs, private paths, and production counts remain in restricted
 operational evidence and are not included in this public backup.
 
+### Aggregate-plan normalization and quota response
+
+A later grouped aggregate produced structurally valid JSON but included its
+numeric aggregate source field in `fields` as well as in `aggregates`. Frappe
+correctly rejected the plan because aggregate queries may select only group-by
+fields. The parser now sets aggregate-plan `fields` to an exact copy of
+`group_by`. This removes only a redundant raw-field selection; DocType,
+filters, aggregate functions and source fields, grouping, sorting, pagination,
+authentication, and all Frappe permission checks remain unchanged.
+
+A concurrent restricted-user failure was unrelated: the chat model returned
+HTTP 429 before invoking the query workflow. An inactive credential smoke test
+returned HTTP 200 and the expected reply for a separately managed fallback,
+which was then selected manually for both generative nodes. Embedding
+credentials were unchanged and automatic credential cycling remains disabled.
+The corrected workflows were imported, published, loaded by the persistent
+stop/start procedure, and verified active with matching current/published
+versions. Exact credential names, workflow IDs, paths, checksums, internal
+DocTypes, and result values remain only in the restricted operations record.
+
 ### 2026-09-03 query-planner resilience correction
 
 Visible history continued to work across F5. Two independent planner failures

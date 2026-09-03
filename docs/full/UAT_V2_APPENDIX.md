@@ -224,3 +224,16 @@ or hard refresh:
 The first two must return only each user's permitted rows, and the last must
 remain denied. A retained conversation proves Redis history persistence but
 does not prove that a newly submitted query completed.
+
+### Aggregate-plan and quota follow-up
+
+Repeat a grouped numeric aggregate after deployment. A model plan that places
+the numeric aggregate source in `fields` must be normalized so `fields` exactly
+matches `group_by`, then pass through normal Frappe validation and execution.
+A restricted user must still receive a denial for the same DocType.
+
+Also distinguish a chat-model HTTP 429 from permission enforcement: the query
+workflow is never invoked in that case. After an explicitly managed fallback
+credential passes an inactive smoke test and is selected, repeat one permitted
+query for each nominated user plus the denied-DocType check. Automatic key
+cycling remains out of scope.

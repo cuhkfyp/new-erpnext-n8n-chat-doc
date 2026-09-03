@@ -201,3 +201,19 @@ Do not reactivate the insecure raw-SQL path during rollout or rollback.
 Rollback disables v2, restores the saved bootstrap/proxy configuration, and
 keeps the secure v2 workflows available for diagnosis. It never restores the
 legacy shared-account raw-SQL execution path.
+
+## Aggregate-plan and quota incidents
+
+When a grouped aggregate reaches Frappe but fails because selected fields do
+not match group-by fields, inspect the generated QueryPlan before changing any
+permissions. The supported parser correction sets aggregate-plan `fields` to
+an exact copy of `group_by`; it must not alter aggregates, filters, sorting,
+limits, the DocType, or authentication. Frappe remains the final validator and
+executor for the real ERPNext user.
+
+A Gemini HTTP 429 in the chat-model node occurs before the permissioned-query
+workflow and must not be described as a Frappe denial. If continued operation
+is required, use the inactive managed-credential smoke workflow, do not expose
+the secret value, and manually bind one verified credential to both generative
+nodes. Keep embeddings on their separate credential and do not implement
+automatic key cycling.

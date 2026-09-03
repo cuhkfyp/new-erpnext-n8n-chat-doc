@@ -17,6 +17,19 @@
   procedure, retaining all managed credential roles and persistent data.
 - Verified administrator-level and restricted-user permitted counts directly
   through Frappe and confirmed that the restricted DocType remains denied.
+- Diagnosed a later grouped aggregate as a semantically inconsistent model
+  plan: its raw selected fields exceeded its group-by fields. Frappe correctly
+  rejected it before execution.
+- Normalized only aggregate-plan `fields` to an exact copy of `group_by`, while
+  retaining normal Frappe validation of the DocType, aggregates, filters,
+  fields, rows, and limits.
+- Confirmed that separate restricted-user failures were chat-model HTTP 429
+  quota responses before query-tool execution. Probed and manually selected a
+  working managed fallback credential for both generative nodes; embeddings
+  and the no-automatic-rotation policy were unchanged.
+- Republished and loaded both corrected workflows, verified current/published
+  versions, n8n HTTP health, Redis `PONG`, and direct execution of the repaired
+  grouped aggregate.
 
 ## 2026-09-02
 

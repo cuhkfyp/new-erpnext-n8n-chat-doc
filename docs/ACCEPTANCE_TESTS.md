@@ -43,6 +43,9 @@ decisions because they intentionally affect shared infrastructure.
 - permitted lists with selected fields;
 - count, sum, average, minimum, and maximum;
 - grouping and sorting;
+- a grouped aggregate where a model redundantly places an aggregate source in
+  selected fields; the parser must reduce selected fields to group-by fields
+  before Frappe, and the result must still match ERPNext permissions;
 - pagination and truncation messages;
 - English and Traditional Chinese prompts;
 - natural business labels, translations, and abbreviations;
@@ -141,6 +144,8 @@ Do not report every model error as a Frappe permission failure:
 - HTTP 401/403 from validation or execution indicates authentication,
   allowlist, or permission handling;
 - HTTP 429 from Gemini indicates quota/rate limiting;
+- HTTP 417 stating that aggregate selected fields exceed group-by fields means
+  Frappe rejected a semantically inconsistent model plan before execution;
 - a fixed safety refusal indicates the deterministic input gate; and
 - a successful backend execution with a hidden reply indicates a presentation
   defect, not a data-access failure.
