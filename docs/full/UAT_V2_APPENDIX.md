@@ -197,3 +197,30 @@ Nine long-lived Frappe containers use Docker's `on-failure` policy, and no
 enabled Frappe boot service was found. Correct the persistent Frappe Compose
 policy and required post-boot recovery steps, then recapture with zero failures
 before future reboot UAT. This deferred work is not a widget-cutover blocker.
+
+### Post-cutover planner-resilience regression
+
+Two lower-right-widget failures can look identical while having different
+causes: malformed model JSON may be rejected by the application, while a
+temporary provider HTTP 503 may prevent planning altogether. Diagnose the
+failed node before changing permissions or credentials.
+
+For an unambiguous no-filter count, the workflow may construct a fixed
+QueryPlanV1 locally only when the requested exact DocType or configured
+business alias matches a DocType in the retrieved schema. The plan must still
+go through the authenticated Frappe execution endpoint. Every other question
+continues through the model planner with a required response schema, strict
+local validation, and a bounded three-attempt retry.
+
+After deploying this correction, repeat the normal-browser smoke after an F5
+or hard refresh:
+
+- a higher-permission user asks for the count through the configured business
+  alias;
+- a restricted user asks for the count of an explicitly permitted DocType;
+  and
+- the restricted user asks about a denied DocType.
+
+The first two must return only each user's permitted rows, and the last must
+remain denied. A retained conversation proves Redis history persistence but
+does not prove that a newly submitted query completed.
